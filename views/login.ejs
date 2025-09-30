@@ -1,0 +1,195 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
+      color: #E0E0E0;
+      font-family: "Karla", sans-serif;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    form {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      max-width: 450px;
+      width: 100%;
+      box-sizing: border-box;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #F8F8F8;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      font-size: 14px;
+      padding-bottom: 0.5rem;
+      color: #BBDEFB;
+    }
+
+    input {
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E0E0E0;
+    }
+
+    input:focus {
+      border: 2px solid #9C27B0;
+      outline: none;
+      box-shadow: 0 0 10px rgba(156, 39, 176, 0.6);
+    }
+
+    input:hover {
+      border: 1.5px solid #9C27B0;
+      cursor: pointer;
+    }
+
+    .error-msg, .alert-error {
+      color: #FF5252;
+      font-size: 13px;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .alert-error {
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid #FF5252;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .input-error {
+      border: 1.5px solid #FF5252;
+    }
+
+    button {
+      background: rgba(156, 39, 176, 0.8);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: white;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #7B1FA2;
+      transform: translateY(-2px);
+    }
+
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      text-decoration: none;
+      color: #BBDEFB;
+    }
+
+    a:visited {
+      color: #90CAF9;
+    }
+  </style>
+</head>
+<body>
+  <form id="loginForm" action="/login" method="POST" novalidate>
+    <h2>Iniciar Sesión</h2>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert-error">
+        <% errors.forEach(error => { %>
+          <p><%= error.msg %></p>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <div class="form-group">
+      <label for="email">Dirección de correo</label>
+      <input 
+        type="email" 
+        id="email" 
+        name="email" 
+        placeholder="Ej: correo@example.com" 
+        value="<%= formData && formData.email || '' %>" 
+        required />
+      <span class="error-msg" id="error-email">Por favor, llena este campo</span>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <input 
+        type="password" 
+        id="password" 
+        name="password" 
+        placeholder="Ej: User12m!" 
+        required />
+      <span class="error-msg" id="error-password">Por favor, llena este campo</span>
+    </div>
+
+    <button type="submit">Iniciar Sesión</button>
+    <a href="/register">Crear Cuenta</a>
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("error-email").style.display = "none";
+      document.getElementById("error-password").style.display = "none";
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+      let email = document.getElementById("email");
+      let password = document.getElementById("password");
+      let errorEmail = document.getElementById("error-email");
+      let errorPassword = document.getElementById("error-password");
+
+      let valid = true;
+
+      errorEmail.style.display = "none";
+      errorPassword.style.display = "none";
+      email.classList.remove("input-error");
+      password.classList.remove("input-error");
+
+      if (email.value.trim() === "") {
+        errorEmail.style.display = "block";
+        email.classList.add("input-error");
+        valid = false;
+      }
+
+      if (password.value.trim() === "") {
+        errorPassword.style.display = "block";
+        password.classList.add("input-error");
+        valid = false;
+      }
+
+      if (!valid) {
+        event.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

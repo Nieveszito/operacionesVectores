@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Operaciones</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
+            margin: 0;
+            padding: 0;
+            color: #E0E0E0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .background-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 25s infinite ease-in-out alternate;
+        }
+
+        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 15%; background: rgba(0, 0, 139, 0.3); }
+        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 80%; background: rgba(75, 0, 130, 0.3); }
+        .shape:nth-child(3) { width: 100px; height: 100px; top: 40%; left: 50%; background: rgba(0, 191, 255, 0.2); }
+        .shape:nth-child(4) { width: 180px; height: 180px; top: 20%; left: 60%; background: rgba(123, 104, 238, 0.3); }
+        .shape:nth-child(5) { width: 120px; height: 120px; top: 85%; left: 20%; background: rgba(0, 0, 205, 0.3); }
+
+        @keyframes float {
+            0% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(20px,30px) scale(1.1); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        header, footer {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            text-align: center;
+            color: #F8F8F8;
+        }
+
+        header h1, footer p { margin: 0; }
+
+        .container {
+            flex: 1;
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 { text-align: center; color: #BBDEFB; margin-top: 0; }
+
+        .alert.success {
+            background: rgba(0,191,255,0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #00BFFF;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #E0E0E0;
+            font-size: 0.9em;
+        }
+
+        .history-table th, .history-table td {
+            padding: 12px 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .history-table th {
+            background: rgba(156,39,176,0.6);
+            color: #FFFFFF;
+        }
+
+        .history-table tr:nth-child(even) {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(156,39,176,0.8);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+        }
+        .btn:hover {
+            background: #7B1FA2;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background: rgba(255,0,0,0.6) !important;
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+        .delete-btn:hover {
+            background: rgba(255,0,0,0.8) !important;
+            transform: translateY(-2px);
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            color: #E0E0E0;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        header ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header ul li {
+            display: inline-block;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #BBDEFB;
+            font-style: italic;
+            padding: 10px;
+        }
+
+        @media(max-width:768px){
+            .history-table {
+                font-size: 0.8em;
+            }
+            .history-table th, .history-table td { 
+                padding: 8px 5px; 
+            }
+            .btn, .delete-btn {
+                padding: 6px 8px;
+                font-size: 0.75em;
+            }
+            header ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media(max-width:480px){
+            .container {
+                padding: 15px;
+            }
+            .history-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <header>
+        <ul>
+            <li><h1>Historial de Operaciones</h1></li>
+            <li><a href="/dashboard" class="back-btn">Regresar al Dashboard</a></li>
+        </ul>
+    </header>
+
+    <div class="container">
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert success">
+                <p><%= message %></p>
+            </div>
+        <% } %>
+
+        <% if (operations && operations.length > 0) { %>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Operación</th>
+                        <th>Vector A</th>
+                        <th>Vector B</th>
+                        <th>Vector C</th>
+                        <th>Resultado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% operations.forEach(op => { %>
+                        <tr>
+                            <td>
+                                <% 
+                                    const operationNames = {
+                                        'suma': 'Suma',
+                                        'angulo': 'Ángulo',
+                                        'productoPunto': 'Producto Punto',
+                                        'productoCruz': 'Producto Cruz',
+                                        'tripleProductoEscalar': 'Triple Producto Escalar',
+                                        'tripleProductoVectorial': 'Triple Producto Vectorial'
+                                    };
+                                %>
+                                <%= operationNames[op.operation_type] || op.operation_type %>
+                            </td>
+                            <td><%= op.vector_a %></td>
+                            <td><%= op.vector_b %></td>
+                            <td>
+                                <% if (op.vector_c) { %>
+                                    <%= op.vector_c %>
+                                <% } else { %>
+                                    <span class="no-data">-</span>
+                                <% } %>
+                            </td>
+                            <td style="max-width: 200px;">
+                                <%= op.result %>
+                            </td>
+                            <td><%= new Date(op.created_at).toLocaleString() %></td>
+                            <td style="white-space: nowrap;">
+                                <a href="/download-pdf/<%= op.id %>" class="btn">PDF</a>
+                                <form action="/history/delete/<%= op.id %>" method="POST" style="display:inline; margin-left: 5px;">
+                                    <button type="submit" 
+                                            class="delete-btn"
+                                            onclick="return confirm('¿Seguro que quieres eliminar esta operación?')">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <p style="text-align:center; margin-top:20px; color: #BBDEFB;">No hay operaciones en el historial.</p>
+        <% } %>
+    </div>
+
+    <footer>
+        <p>© 2025 Tu Aplicación de Vectores | Todos los derechos reservados</p>
+    </footer>
+</body>
+</html>

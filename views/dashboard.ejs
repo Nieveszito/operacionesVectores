@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
+            margin: 0;
+            padding: 0;
+            color: #E0E0E0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .background-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 25s infinite ease-in-out alternate;
+        }
+
+        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 15%; background: rgba(0, 0, 139, 0.3); }
+        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 80%; background: rgba(75, 0, 130, 0.3); }
+        .shape:nth-child(3) { width: 100px; height: 100px; top: 40%; left: 50%; background: rgba(0, 191, 255, 0.2); }
+        .shape:nth-child(4) { width: 180px; height: 180px; top: 20%; left: 60%; background: rgba(123, 104, 238, 0.3); }
+        .shape:nth-child(5) { width: 120px; height: 120px; top: 85%; left: 20%; background: rgba(0, 0, 205, 0.3); }
+
+        @keyframes float {
+            0% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(20px,30px) scale(1.1); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        header, footer {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            text-align: center;
+            color: #F8F8F8;
+        }
+
+        header h1, footer p { margin: 0; }
+
+        .container {
+            flex: 1;
+            width: 90%;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .dashboard-cards {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+        }
+
+        .card h3 { margin-top: 0; color: #BBDEFB; }
+        .card p { color: #E0E0E0; margin-bottom: 15px; }
+        .card .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(156,39,176,0.8);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .card .btn:hover {
+            background: #7B1FA2;
+            transform: translateY(-2px);
+        }
+
+        @media(max-width:768px){
+            .dashboard-cards { flex-direction: column; align-items: center; }
+            .card { width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <header style="display:flex; justify-content: space-between; align-items: center; padding: 15px 30px;">
+    <h1>Bienvenido a tu Panel</h1>
+    <a href="/logout" 
+       style="padding: 10px 20px; background: rgba(156,39,176,0.8); color: #fff; border-radius: 10px; text-decoration:none; font-weight:500; transition: all 0.3s ease;">
+       Cerrar Sesión
+    </a>
+</header>
+
+    <div class="container">
+        <h2>Hola, <%= user.username %></h2>
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>Operaciones con Vectores</h3>
+                <p>Realiza diferentes operaciones con vectores</p>
+                <a href="/vectors" class="btn">Ir a Operaciones</a>
+            </div>
+            <div class="card">
+                <h3>Historial</h3>
+                <p>Revisa tu historial de operaciones</p>
+                <a href="/history" class="btn">Ver Historial</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Tu Aplicación de Vectores | Todos los derechos reservados</p>
+    </footer>
+</body>
+</html>

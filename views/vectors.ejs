@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operaciones con Vectores</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 0;
+            box-sizing: border-box;
+            color: #E0E0E0;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .background-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(138, 43, 226, 0.3);
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 15%; animation-duration: 25s; background: rgba(0, 0, 139, 0.3); }
+        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 80%; animation-duration: 20s; background: rgba(75, 0, 130, 0.3); }
+        .shape:nth-child(3) { width: 100px; height: 100px; top: 40%; left: 50%; animation-duration: 30s; background: rgba(0, 191, 255, 0.2); }
+        .shape:nth-child(4) { width: 180px; height: 180px; top: 20%; left: 60%; animation-duration: 22s; background: rgba(123, 104, 238, 0.3); }
+        .shape:nth-child(5) { width: 120px; height: 120px; top: 85%; left: 20%; animation-duration: 28s; background: rgba(0, 0, 205, 0.3); }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, 30px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        h2 { color: #F8F8F8; margin-bottom: 25px; font-size: 2em; font-weight: 600; }
+        .alert { padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; }
+        .alert.error { background: rgba(255, 0, 0, 0.2); color: #FF5252; border: 1px solid #FF5252; }
+        .alert.success { background: rgba(0, 255, 127, 0.2); color: #00FF7F; border: 1px solid #00FF7F; }
+
+        .vector-form { display: flex; flex-direction: column; align-items: center; }
+        .form-group { width: 100%; margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 1em; color: #BBDEFB; }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 1em;
+            color: #111;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus, select:focus { outline: none; border-color: #9C27B0; box-shadow: 0 0 15px rgba(156, 39, 176, 0.4); }
+
+        button[type="submit"] {
+            background: rgba(156, 39, 176, 0.8);
+            color: #FFFFFF;
+            padding: 15px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button[type="submit"]:hover { background: #7B1FA2; transform: translateY(-2px); }
+
+        .result-section { margin-top: 25px; padding: 20px; background: rgba(255, 255, 255, 0.08); border-radius: 15px; text-align: left; }
+        .result-section h3 { color: #F8F8F8; margin-top: 0; margin-bottom: 10px; }
+        #resultDisplay { font-size: 1.2em; font-weight: 600; color: #BBDEFB; white-space: pre-wrap; }
+        #errorMessage { color: #FF5252; font-weight: 500; margin-top: 10px; display: none; }
+
+        .chart-section { margin-top: 25px; padding: 20px; background: rgba(255, 255, 255, 0.08); border-radius: 15px; text-align: center; }
+        .chart-section h3 { color: #F8F8F8; margin-top: 0; margin-bottom: 10px; }
+        .plot-container { width: 100%; min-height: 300px; }
+
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: #E0E0E0;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <a href="/dashboard" class="back-btn">Regresar</a>
+        <h2>Operaciones con Vectores</h2>
+
+        <% if (error) { %>
+            <div class="alert error">
+                <p><%= error %></p>
+            </div>
+        <% } %>
+
+        <% if (result) { %>
+            <div class="alert success">
+                <h3>Resultado:</h3>
+                <p id="resultDisplay"><%= result %></p>
+            </div>
+        <% } %>
+
+        <form action="/calculate" method="POST" class="vector-form">
+            <div class="form-group">
+                <label for="vectorA">Vector A (separado por comas):</label>
+                <input type="text" id="vectorA" name="vectorA" 
+                       value="<%= formData && formData.vectorA || '0,0,0' %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="vectorB">Vector B (separado por comas):</label>
+                <input type="text" id="vectorB" name="vectorB" 
+                       value="<%= formData && formData.vectorB || '0,0,0' %>" required>
+            </div>
+
+            <div class="form-group" id="vectorCGroup" style="display: none;">
+                <label for="vectorC">Vector C (separado por comas):</label>
+                <input type="text" id="vectorC" name="vectorC" 
+                       value="<%= formData && formData.vectorC || '0,0,0' %>">
+            </div>
+
+            <div class="form-group">
+                <label for="operation">Operación:</label>
+                <select id="operation" name="operation" required>
+                    <option value="suma" <%= (formData && formData.operation === 'suma') ? 'selected' : '' %>>Suma</option>
+                    <option value="angulo" <%= (formData && formData.operation === 'angulo') ? 'selected' : '' %>>Ángulo</option>
+                    <option value="productoPunto" <%= (formData && formData.operation === 'productoPunto') ? 'selected' : '' %>>Producto Punto</option>
+                    <option value="productoCruz" <%= (formData && formData.operation === 'productoCruz') ? 'selected' : '' %>>Producto Cruz</option>
+                    <option value="tripleProductoEscalar" <%= (formData && formData.operation === 'tripleProductoEscalar') ? 'selected' : '' %>>Triple Producto Escalar (A·(B×C))</option>
+                    <option value="tripleProductoVectorial" <%= (formData && formData.operation === 'tripleProductoVectorial') ? 'selected' : '' %>>Triple Producto Vectorial (A×(B×C))</option>
+                </select>
+            </div>
+
+            <button type="submit">Calcular</button>
+        </form>
+
+        <div class="result-section">
+            <h3>Resultado:</h3>
+            <p id="resultDisplay"><%= result || '' %></p>
+            <p id="errorMessage" class="error-message"></p>
+        </div>
+
+        <div class="chart-section">
+            <h3>Gráfica de Vectores</h3>
+            <div id="vectorPlot" class="plot-container"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+    <script>
+    // --- Funciones para calcular vectores ---
+    const vectorOperations = {
+        suma: (a, b) => a.map((v, i) => v + b[i]),
+        angulo: (a, b) => {
+            const dot = a.reduce((sum, v, i) => sum + v * b[i], 0);
+            const magA = Math.sqrt(a.reduce((sum, v) => sum + v*v, 0));
+            const magB = Math.sqrt(b.reduce((sum, v) => sum + v*v, 0));
+            if (magA === 0 || magB === 0) throw new Error("Vector nulo no permitido.");
+            let cosT = Math.min(1, Math.max(-1, dot / (magA * magB)));
+            return Math.acos(cosT) * (180/Math.PI);
+        },
+        productoPunto: (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0),
+        productoCruz: (a, b) => {
+            if (a.length !== 3 || b.length !== 3) throw new Error("Solo 3D");
+            return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+        },
+        tripleProductoEscalar: (a, b, c) => {
+            const cross = vectorOperations.productoCruz(b, c);
+            return vectorOperations.productoPunto(a, cross);
+        },
+        tripleProductoVectorial: (a, b, c) => {
+            const crossBC = vectorOperations.productoCruz(b, c);
+            return vectorOperations.productoCruz(a, crossBC);
+        }
+    };
+
+    function plotVectors(vecA, vecB, vecC, vecR) {
+        const data = [];
+        const layout = { 
+            paper_bgcolor:'rgba(0,0,0,0)', 
+            plot_bgcolor:'rgba(0,0,0,0)', 
+            font:{color:'#E0E0E0'}, 
+            margin:{l:50,r:50,b:50,t:50},
+            showlegend: true,
+            autosize: true
+        };
+        
+        // Vector A
+        if (vecA && vecA.length >= 2) {
+            const traceA = {
+                x: [0, vecA[0]], 
+                y: [0, vecA[1]], 
+                mode: 'lines+markers+text',
+                type: 'scatter',
+                line: { color: '#42a5f5', width: 8 },
+                marker: { size: 8 },
+                name: 'Vector A',
+                text: ['', 'A'],
+                textposition: 'top center'
+            };
+            
+            if (vecA.length === 3) {
+                traceA.z = [0, vecA[2]];
+                traceA.type = 'scatter3d';
+            }
+            data.push(traceA);
+        }
+        
+        // Vector B
+        if (vecB && vecB.length >= 2) {
+            const traceB = {
+                x: [0, vecB[0]], 
+                y: [0, vecB[1]], 
+                mode: 'lines+markers+text',
+                type: 'scatter',
+                line: { color: '#ab47bc', width: 8 },
+                marker: { size: 8 },
+                name: 'Vector B',
+                text: ['', 'B'],
+                textposition: 'top center'
+            };
+            
+            if (vecB.length === 3) {
+                traceB.z = [0, vecB[2]];
+                traceB.type = 'scatter3d';
+            }
+            data.push(traceB);
+        }
+        
+        // Vector C
+        if (vecC && vecC.length >= 2) {
+            const traceC = {
+                x: [0, vecC[0]], 
+                y: [0, vecC[1]], 
+                mode: 'lines+markers+text',
+                type: 'scatter',
+                line: { color: '#66bb6a', width: 8 },
+                marker: { size: 8 },
+                name: 'Vector C',
+                text: ['', 'C'],
+                textposition: 'top center'
+            };
+            
+            if (vecC.length === 3) {
+                traceC.z = [0, vecC[2]];
+                traceC.type = 'scatter3d';
+            }
+            data.push(traceC);
+        }
+        
+        // Vector Resultante
+        if (vecR && vecR.length >= 2) {
+            const traceR = {
+                x: [0, vecR[0]], 
+                y: [0, vecR[1]], 
+                mode: 'lines+markers+text',
+                type: 'scatter',
+                line: { color: '#ffeb3b', width: 10 },
+                marker: { size: 10 },
+                name: 'Resultado',
+                text: ['', 'R'],
+                textposition: 'top center'
+            };
+            
+            if (vecR.length === 3) {
+                traceR.z = [0, vecR[2]];
+                traceR.type = 'scatter3d';
+            }
+            data.push(traceR);
+        }
+
+        if (data.some(d => d.type === 'scatter3d')) {
+            layout.scene = { 
+                xaxis: { title: 'X', backgroundcolor: 'rgba(0,0,0,0)' },
+                yaxis: { title: 'Y', backgroundcolor: 'rgba(0,0,0,0)' },
+                zaxis: { title: 'Z', backgroundcolor: 'rgba(0,0,0,0)' },
+                bgcolor: 'rgba(0,0,0,0)',
+                camera: { eye: { x: 1.5, y: 1.5, z: 1.5 } }
+            };
+        } else {
+            layout.xaxis = { title: 'X', gridcolor: 'rgba(255,255,255,0.1)' };
+            layout.yaxis = { 
+                title: 'Y', 
+                gridcolor: 'rgba(255,255,255,0.1)',
+                scaleanchor: "x",
+                scaleratio: 1
+            };
+        }
+        
+        const plotContainer = document.getElementById('vectorPlot');
+        Plotly.purge(plotContainer);
+        Plotly.newPlot(plotContainer, data, layout, {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false
+        });
+    }
+
+    // --- Manejo del formulario ---
+    document.getElementById('operation').addEventListener('change', function() {
+        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+        const vectorCGroup = document.getElementById('vectorCGroup');
+        if (tripleOperations.includes(this.value)) {
+            vectorCGroup.style.display = 'block';
+        } else {
+            vectorCGroup.style.display = 'none';
+        }
+    });
+
+    // Manejar envío del formulario - ENVIAR Y GUARDAR
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // NO prevenir el envío aquí - dejar que el formulario se envíe normalmente
+        // Pero primero mostrar la gráfica inmediatamente
+        
+        const formData = new FormData(this);
+        const operation = document.getElementById('operation').value;
+        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+        
+        try {
+            const a = document.getElementById('vectorA').value.split(',').map(Number);
+            const b = document.getElementById('vectorB').value.split(',').map(Number);
+            let c = [0, 0, 0];
+            
+            if (tripleOperations.includes(operation)) {
+                c = document.getElementById('vectorC').value.split(',').map(Number);
+            }
+            
+            // Validaciones
+            if (a.some(isNaN) || b.some(isNaN) || c.some(isNaN)) {
+                throw new Error("Solo números separados por comas");
+            }
+            
+            if (a.length < 2 || b.length < 2 || c.length < 2) {
+                throw new Error("Vectores al menos 2D");
+            }
+            
+            let resVec = null;
+            
+            // Calcular resultado para la gráfica
+            switch(operation) {
+                case 'suma': 
+                    resVec = vectorOperations.suma(a, b); 
+                    break;
+                case 'productoCruz': 
+                    resVec = vectorOperations.productoCruz(a, b); 
+                    break;
+                case 'tripleProductoVectorial': 
+                    resVec = vectorOperations.tripleProductoVectorial(a, b, c); 
+                    break;
+            }
+            
+            // Graficar inmediatamente (antes de que la página se recargue)
+            if (tripleOperations.includes(operation)) {
+                plotVectors(a, b, c, resVec);
+            } else {
+                plotVectors(a, b, null, resVec);
+            }
+            
+            // Agregar un pequeño delay para que la gráfica se renderice antes del envío
+            setTimeout(() => {
+                // El formulario se enviará automáticamente después de este timeout
+            }, 100);
+            
+        } catch(err) {
+            e.preventDefault(); // Solo prevenir envío si hay error
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = "Error: " + err.message;
+            errorMsg.style.display = 'block';
+            plotVectors(null, null, null, null);
+        }
+    });
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', function() {
+        const operation = document.getElementById('operation').value;
+        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+        const vectorCGroup = document.getElementById('vectorCGroup');
+        
+        if (tripleOperations.includes(operation)) {
+            vectorCGroup.style.display = 'block';
+        }
+        
+        // Si hay un resultado del servidor (después del envío), graficarlo
+        <% if (result && formData) { %>
+            setTimeout(() => {
+                try {
+                    const a = '<%= formData.vectorA %>'.split(',').map(Number);
+                    const b = '<%= formData.vectorB %>'.split(',').map(Number);
+                    const operation = '<%= formData.operation %>';
+                    const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+                    let c = [0, 0, 0];
+                    
+                    if (tripleOperations.includes(operation) && '<%= formData.vectorC %>') {
+                        c = '<%= formData.vectorC %>'.split(',').map(Number);
+                    }
+                    
+                    let resVec = null;
+                    switch(operation) {
+                        case 'suma': 
+                            resVec = vectorOperations.suma(a, b); 
+                            break;
+                        case 'productoCruz': 
+                            resVec = vectorOperations.productoCruz(a, b); 
+                            break;
+                        case 'tripleProductoVectorial': 
+                            resVec = vectorOperations.tripleProductoVectorial(a, b, c); 
+                            break;
+                    }
+                    
+                    if (tripleOperations.includes(operation)) {
+                        plotVectors(a, b, c, resVec);
+                    } else {
+                        plotVectors(a, b, null, resVec);
+                    }
+                } catch(err) {
+                    console.log('Error al graficar resultado del servidor:', err);
+                }
+            }, 500);
+        <% } else { %>
+            // Gráfica vacía inicial
+            plotVectors(null, null, null, null);
+        <% } %>
+    });
+</script>
+    
+</body>
+</html>
