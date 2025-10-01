@@ -1,38 +1,30 @@
-const db = require('../config/database');
+const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class User {
-  static create(userData, callback) {
+  static async create(userData) {
     const { username, email, password } = userData;
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) return callback(err);
-      
-      const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-      db.execute(query, [username, email, hashedPassword], (err, results) => {
-        if (err) return callback(err);
-        callback(null, results);
-      });
-    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+    const [results] = await pool.execute(query, [username, email, hashedPassword]);
+    return results;
   }
 
-  static findByEmail(email, callback) {
+  static async findByEmail(email) {
     const query = 'SELECT * FROM users WHERE email = ?';
-    db.execute(query, [email], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results[0]);
-    });
+    const [rows] = await pool.execute(query, [email]);
+    return rows[0];
   }
 
-  static findById(id, callback) {
+  static async findById(id) {
     const query = 'SELECT id, username, email, created_at FROM users WHERE id = ?';
-    db.execute(query, [id], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results[0]);
-    });
+    const [rows] = await pool.execute(query, [id]);
+    return rows[0];
   }
 
-  static comparePassword(password, hashedPassword, callback) {
-    bcrypt.compare(password, hashedPassword, callback);
+  static async comparePassword(password, hashedPassword) {
+    return bcrypt.compare(password, hashedPassword);
   }
 }
 

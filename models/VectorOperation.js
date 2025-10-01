@@ -1,38 +1,41 @@
-const db = require('../config/database');
+const pool = require('../config/database');
 
 class VectorOperation {
-  static create(operationData, callback) {
+  static async create(operationData) {
     const { user_id, operation_type, vector_a, vector_b, vector_c, result } = operationData;
-    
-    const query = 'INSERT INTO vector_operations (user_id, operation_type, vector_a, vector_b, vector_c, result) VALUES (?, ?, ?, ?, ?, ?)';
-    db.execute(query, [user_id, operation_type, vector_a, vector_b, vector_c || null, result], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results);
-    });
+
+    const query = `
+      INSERT INTO vector_operations 
+      (user_id, operation_type, vector_a, vector_b, vector_c, result) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [results] = await pool.execute(query, [
+      user_id,
+      operation_type,
+      vector_a,
+      vector_b,
+      vector_c || null,
+      result
+    ]);
+    return results;
   }
 
-  static findByUserId(user_id, callback) {
+  static async findByUserId(user_id) {
     const query = 'SELECT * FROM vector_operations WHERE user_id = ? ORDER BY created_at DESC';
-    db.execute(query, [user_id], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results);
-    });
+    const [rows] = await pool.execute(query, [user_id]);
+    return rows;
   }
 
-  static findById(id, callback) {
+  static async findById(id) {
     const query = 'SELECT * FROM vector_operations WHERE id = ?';
-    db.execute(query, [id], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results[0]);
-    });
+    const [rows] = await pool.execute(query, [id]);
+    return rows[0];
   }
 
-  static deleteById(id, userId, callback) {
+  static async deleteById(id, userId) {
     const query = 'DELETE FROM vector_operations WHERE id = ? AND user_id = ?';
-    db.execute(query, [id, userId], (err, results) => {
-      if (err) return callback(err);
-      callback(null, results);
-    });
+    const [results] = await pool.execute(query, [id, userId]);
+    return results;
   }
 }
 

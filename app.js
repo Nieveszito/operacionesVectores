@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -21,12 +22,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'mi_clave_secreta_muy_segura',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false }
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'mi_clave_secreta_muy_segura',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+  })
+);
 
 // Middleware para que "user" esté disponible en todas las vistas
 app.use((req, res, next) => {
