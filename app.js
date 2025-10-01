@@ -9,6 +9,8 @@ const vectorRoutes = require('./routes/vectors');
 const historyRoutes = require('./routes/history');
 
 const app = express();
+
+// ⚡ Usa el puerto que asigna Railway o 3000 en local
 const PORT = process.env.PORT || 3000;
 
 // Configuración de la aplicación
@@ -25,8 +27,10 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false }
 }));
+
+// Middleware para que "user" esté disponible en todas las vistas
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null; // disponible en todas las vistas
+  res.locals.user = req.session.user || null;
   next();
 });
 
@@ -50,9 +54,7 @@ app.use('/', authRoutes);
 app.use('/', vectorRoutes);
 app.use('/', historyRoutes);
 
-
-
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
+  console.log(`✅ Servidor ejecutándose en puerto ${PORT}`);
 });
