@@ -1,69 +1,74 @@
-const VectorOperation = require('../models/VectorOperation'); // ← FALTA ESTA LÍNEA
+const VectorOperation = require('../models/VectorOperation');
 
-exports.getHistory = (req, res) => {
+exports.getHistory = async (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
 
-  const user_id = req.session.user.id;
-  const message = req.query.message || null;
-  
-  VectorOperation.findByUserId(user_id, (err, operations) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).render('error', {
-        title: 'Error',
-        message: 'Error al cargar el historial'
-      });
-    }
-    
+  try {
+    const user_id = req.session.user.id;
+    const message = req.query.message || null;
+    const operations = await VectorOperation.findByUserId(user_id);
+
     res.render('history', {
       title: 'Historial de Operaciones',
       user: req.session.user,
-      operations: operations,
-      message: message
+      operations,
+      message
     });
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Error al cargar el historial'
+    });
+  }
 };
 
-exports.deleteOperation = (req, res) => {
+exports.deleteOperation = async (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
 
-  const { id } = req.params;
-  const user_id = req.session.user.id;
-  
-  VectorOperation.deleteById(id, user_id, (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).render('error', {
-        title: 'Error',
-        message: 'Error al eliminar la operación'
-      });
-    }
-    
+  try {
+    const { id } = req.params;
+    const user_id = req.session.user.id;
+    await VectorOperation.deleteById(id, user_id);
+
     res.redirect('/history?message=Operación eliminada correctamente');
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Error al eliminar la operación'
+    });
+  }
 };
 
-exports.downloadPDF = (req, res) => {
+exports.downloadPDF = async (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
 
-  const { id } = req.params;
-  const user_id = req.session.user.id;
-  
-  VectorOperation.findById(id, (err, operation) => {
-    if (err || !operation || operation.user_id !== user_id) {
+  try {
+    const { id } = req.params;
+    const user_id = req.session.user.id;
+    const operation = await VectorOperation.findById(id);
+
+    if (!operation || operation.user_id !== user_id) {
       return res.status(404).render('error', {
         title: 'Error',
         message: 'Operación no encontrada'
       });
     }
 
-    // Tu lógica para generar PDF aquí
+    // Aquí deberías generar el PDF real
     res.redirect('/history?message=PDF generado correctamente');
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Error al generar el PDF'
+    });
+  }
 };
