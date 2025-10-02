@@ -359,18 +359,21 @@
                        value="<%= formData && formData.vectorB || '0,0,0' %>" required>
             </div>
 
+            
+
+            <div class="form-group" id="vectorCGroup" style="display: none;">
+                <label for="vectorC">Vector C (separado por comas):</label>
+                <input type="text" id="vectorC" name="vectorC" 
+                       value="<%= formData && formData.vectorC || '0,0,0' %>">
+            </div>
+
+
             <div class="form-group" id="tripleTypeGroup" style="display: none;">
                 <label for="tripleType">Tipo de Triple Producto Vectorial:</label>
                 <select id="tripleType" name="tripleType">
                     <option value="axbxc" <%= (formData && formData.tripleType === 'axbxc') ? 'selected' : '' %>>(A×B)×C</option>
                     <option value="axbxc2" <%= (formData && formData.tripleType === 'axbxc2') ? 'selected' : '' %>>A×(B×C)</option>
                 </select>
-            </div>
-
-            <div class="form-group" id="vectorCGroup" style="display: none;">
-                <label for="vectorC">Vector C (separado por comas):</label>
-                <input type="text" id="vectorC" name="vectorC" 
-                       value="<%= formData && formData.vectorC || '0,0,0' %>">
             </div>
 
             <div class="form-group">

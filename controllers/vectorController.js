@@ -289,7 +289,7 @@ exports.generatePDF = async (req, res) => {
     
     yPosition += 30;
 
-    // Tipo de operación con fondo colorido
+    // Tipo de operación con fondo colorido - TEXTO MÁS SEPARADO
     doc.fillColor('#ffffff')
        .roundedRect(50, yPosition, 495, 30, 5)
        .fill()
@@ -298,12 +298,13 @@ exports.generatePDF = async (req, res) => {
        .roundedRect(50, yPosition, 495, 30, 5)
        .stroke();
     
+    // Texto más separado - etiqueta a la izquierda, valor más a la derecha
     doc.fillColor('#2c3e50')
        .fontSize(14)
        .font('Helvetica-Bold')
        .text('TIPO DE OPERACIÓN:', 60, yPosition + 10)
        .fillColor('#e74c3c')
-       .text(operation.operation_type.toUpperCase(), 200, yPosition + 10);
+       .text(operation.operation_type.toUpperCase(), 350, yPosition + 10); // Cambiado de 200 a 350
     
     yPosition += 50;
 
