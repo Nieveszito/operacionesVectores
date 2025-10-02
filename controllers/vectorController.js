@@ -375,7 +375,7 @@ exports.generatePDF = async (req, res) => {
     doc.fillColor('#7f8c8d')
        .fontSize(10)
        .font('Helvetica-Oblique')
-       .text('Sistema de Operaciones Vectoriales - Generado automáticamente', 
+       .text('Sistema de Operaciones Vectoriales', 
              50, 750, { align: 'center' });
 
     doc.end();
