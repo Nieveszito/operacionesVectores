@@ -265,23 +265,20 @@ exports.generatePDF = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=operacion_${id}.pdf`);
     doc.pipe(res);
 
-    // --- ENCABEZADO CON COLORES ---
     doc.fillColor('#2c3e50')
        .fontSize(24)
        .font('Helvetica-Bold')
        .text('OPERACIÓN CON VECTORES', 50, 50, { align: 'center' });
     
-    // Línea decorativa
+  
     doc.strokeColor('#3498db')
        .lineWidth(3)
        .moveTo(50, 85)
        .lineTo(545, 85)
        .stroke();
 
-    // --- INFORMACIÓN DE LA OPERACIÓN ---
     let yPosition = 120;
 
-    // Fecha
     doc.fillColor('#7f8c8d')
        .fontSize(10)
        .font('Helvetica')
@@ -289,7 +286,6 @@ exports.generatePDF = async (req, res) => {
     
     yPosition += 30;
 
-    // Tipo de operación con fondo colorido - TEXTO MÁS SEPARADO
     doc.fillColor('#ffffff')
        .roundedRect(50, yPosition, 495, 30, 5)
        .fill()
@@ -298,13 +294,13 @@ exports.generatePDF = async (req, res) => {
        .roundedRect(50, yPosition, 495, 30, 5)
        .stroke();
     
-    // Texto más separado - etiqueta a la izquierda, valor más a la derecha
+    
     doc.fillColor('#2c3e50')
        .fontSize(14)
        .font('Helvetica-Bold')
        .text('TIPO DE OPERACIÓN:', 60, yPosition + 10)
        .fillColor('#e74c3c')
-       .text(operation.operation_type.toUpperCase(), 350, yPosition + 10); // Cambiado de 200 a 350
+       .text(operation.operation_type.toUpperCase(),270, yPosition + 10); 
     
     yPosition += 50;
 
