@@ -256,22 +256,131 @@ exports.generatePDF = async (req, res) => {
       });
     }
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({
+      margin: 50,
+      size: 'A4'
+    });
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=operacion_${id}.pdf`);
     doc.pipe(res);
 
-    doc.fontSize(20).text('Operación con Vectores', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Tipo de operación: ${operation.operation_type}`);
-    if (operation.triple_type) {
-      doc.text(`Variante: ${operation.triple_type === 'axbxc' ? '(A×B)×C' : 'A×(B×C)'}`);
+    // --- ENCABEZADO CON COLORES ---
+    doc.fillColor('#2c3e50')
+       .fontSize(24)
+       .font('Helvetica-Bold')
+       .text('OPERACIÓN CON VECTORES', 50, 50, { align: 'center' });
+    
+    // Línea decorativa
+    doc.strokeColor('#3498db')
+       .lineWidth(3)
+       .moveTo(50, 85)
+       .lineTo(545, 85)
+       .stroke();
+
+    // --- INFORMACIÓN DE LA OPERACIÓN ---
+    let yPosition = 120;
+
+    // Fecha
+    doc.fillColor('#7f8c8d')
+       .fontSize(10)
+       .font('Helvetica')
+       .text(`Generado: ${new Date().toLocaleString()}`, 50, yPosition);
+    
+    yPosition += 30;
+
+    // Tipo de operación con fondo colorido
+    doc.fillColor('#ffffff')
+       .roundedRect(50, yPosition, 495, 30, 5)
+       .fill()
+       .strokeColor('#3498db')
+       .lineWidth(1)
+       .roundedRect(50, yPosition, 495, 30, 5)
+       .stroke();
+    
+    doc.fillColor('#2c3e50')
+       .fontSize(14)
+       .font('Helvetica-Bold')
+       .text('TIPO DE OPERACIÓN:', 60, yPosition + 10)
+       .fillColor('#e74c3c')
+       .text(operation.operation_type.toUpperCase(), 200, yPosition + 10);
+    
+    yPosition += 50;
+
+    // Vectores en cajas con colores
+    const vectors = [
+      { label: 'VECTOR A', value: operation.vector_a, color: '#3498db' },
+      { label: 'VECTOR B', value: operation.vector_b, color: '#e74c3c' }
+    ];
+
+    if (operation.vector_c) {
+      vectors.push({ label: 'VECTOR C', value: operation.vector_c, color: '#2ecc71' });
     }
-    doc.text(`Vector A: ${operation.vector_a}`);
-    doc.text(`Vector B: ${operation.vector_b}`);
-    if (operation.vector_c) doc.text(`Vector C: ${operation.vector_c}`);
-    doc.text(`Resultado: ${operation.result}`);
-    doc.text(`Fecha: ${new Date(operation.created_at).toLocaleString()}`);
+
+    vectors.forEach((vector, index) => {
+      doc.fillColor('#ffffff')
+         .roundedRect(50, yPosition, 495, 40, 5)
+         .fill()
+         .strokeColor(vector.color)
+         .lineWidth(2)
+         .roundedRect(50, yPosition, 495, 40, 5)
+         .stroke();
+      
+      doc.fillColor(vector.color)
+         .fontSize(12)
+         .font('Helvetica-Bold')
+         .text(vector.label, 60, yPosition + 12)
+         .fillColor('#2c3e50')
+         .font('Helvetica')
+         .text(vector.value, 60, yPosition + 28);
+      
+      yPosition += 60;
+    });
+
+    // Resultado destacado
+    doc.fillColor('#f39c12')
+       .fontSize(16)
+       .font('Helvetica-Bold')
+       .text('RESULTADO:', 50, yPosition);
+    
+    yPosition += 25;
+    
+    doc.fillColor('#2c3e50')
+       .roundedRect(50, yPosition, 495, 50, 5)
+       .fill()
+       .strokeColor('#f39c12')
+       .lineWidth(2)
+       .roundedRect(50, yPosition, 495, 50, 5)
+       .stroke();
+    
+    doc.fillColor('#ffffff')
+       .fontSize(14)
+       .font('Helvetica-Bold')
+       .text(operation.result, 60, yPosition + 18, { 
+         width: 475,
+         align: 'center'
+       });
+
+    yPosition += 80;
+
+    // Información adicional si es triple producto
+    if (operation.triple_type) {
+      const tripleTypeText = operation.triple_type === 'axbxc' ? '(A×B)×C' : 'A×(B×C)';
+      doc.fillColor('#9b59b6')
+         .fontSize(12)
+         .font('Helvetica-Bold')
+         .text(`Variante: ${tripleTypeText}`, 50, yPosition);
+      
+      yPosition += 30;
+    }
+
+    // Pie de página
+    doc.fillColor('#7f8c8d')
+       .fontSize(10)
+       .font('Helvetica-Oblique')
+       .text('Sistema de Operaciones Vectoriales - Generado automáticamente', 
+             50, 750, { align: 'center' });
+
     doc.end();
   } catch (err) {
     console.error(err);
