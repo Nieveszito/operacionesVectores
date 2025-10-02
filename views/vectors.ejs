@@ -164,6 +164,14 @@
                        value="<%= formData && formData.vectorB || '0,0,0' %>" required>
             </div>
 
+            <div class="form-group" id="tripleTypeGroup" style="display: none;">
+                <label for="tripleType">Tipo de Triple Producto Vectorial:</label>
+                <select id="tripleType" name="tripleType">
+                    <option value="axbxc" <%= (formData && formData.tripleType === 'axbxc') ? 'selected' : '' %>>(A×B)×C</option>
+                    <option value="axbxc2" <%= (formData && formData.tripleType === 'axbxc2') ? 'selected' : '' %>>A×(B×C)</option>
+                </select>
+            </div>
+
             <div class="form-group" id="vectorCGroup" style="display: none;">
                 <label for="vectorC">Vector C (separado por comas):</label>
                 <input type="text" id="vectorC" name="vectorC" 
@@ -178,7 +186,7 @@
                     <option value="productoPunto" <%= (formData && formData.operation === 'productoPunto') ? 'selected' : '' %>>Producto Punto</option>
                     <option value="productoCruz" <%= (formData && formData.operation === 'productoCruz') ? 'selected' : '' %>>Producto Cruz</option>
                     <option value="tripleProductoEscalar" <%= (formData && formData.operation === 'tripleProductoEscalar') ? 'selected' : '' %>>Triple Producto Escalar (A·(B×C))</option>
-                    <option value="tripleProductoVectorial" <%= (formData && formData.operation === 'tripleProductoVectorial') ? 'selected' : '' %>>Triple Producto Vectorial (A×(B×C))</option>
+                    <option value="tripleProductoVectorial" <%= (formData && formData.operation === 'tripleProductoVectorial') ? 'selected' : '' %>>Triple Producto Vectorial</option>
                 </select>
             </div>
 
@@ -199,280 +207,311 @@
 
     <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
     <script>
-    // --- Funciones para calcular vectores ---
-    const vectorOperations = {
-        suma: (a, b) => a.map((v, i) => v + b[i]),
-        angulo: (a, b) => {
-            const dot = a.reduce((sum, v, i) => sum + v * b[i], 0);
-            const magA = Math.sqrt(a.reduce((sum, v) => sum + v*v, 0));
-            const magB = Math.sqrt(b.reduce((sum, v) => sum + v*v, 0));
-            if (magA === 0 || magB === 0) throw new Error("Vector nulo no permitido.");
-            let cosT = Math.min(1, Math.max(-1, dot / (magA * magB)));
-            return Math.acos(cosT) * (180/Math.PI);
-        },
-        productoPunto: (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0),
-        productoCruz: (a, b) => {
-            if (a.length !== 3 || b.length !== 3) throw new Error("Solo 3D");
-            return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
-        },
-        tripleProductoEscalar: (a, b, c) => {
-            const cross = vectorOperations.productoCruz(b, c);
-            return vectorOperations.productoPunto(a, cross);
-        },
-        tripleProductoVectorial: (a, b, c) => {
-            const crossBC = vectorOperations.productoCruz(b, c);
-            return vectorOperations.productoCruz(a, crossBC);
-        }
-    };
-
-    function plotVectors(vecA, vecB, vecC, vecR) {
-        const data = [];
-        const layout = { 
-            paper_bgcolor:'rgba(0,0,0,0)', 
-            plot_bgcolor:'rgba(0,0,0,0)', 
-            font:{color:'#E0E0E0'}, 
-            margin:{l:50,r:50,b:50,t:50},
-            showlegend: true,
-            autosize: true
+        // --- Funciones para calcular vectores ---
+        const vectorOperations = {
+            suma: (a, b) => a.map((v, i) => v + b[i]),
+            angulo: (a, b) => {
+                const dot = a.reduce((sum, v, i) => sum + v * b[i], 0);
+                const magA = Math.sqrt(a.reduce((sum, v) => sum + v*v, 0));
+                const magB = Math.sqrt(b.reduce((sum, v) => sum + v*v, 0));
+                if (magA === 0 || magB === 0) throw new Error("Ángulo indeterminado");
+                let cosT = Math.min(1, Math.max(-1, dot / (magA * magB)));
+                return Math.acos(cosT) * (180/Math.PI);
+            },
+            productoPunto: (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0),
+            productoCruz: (a, b) => {
+                if (a.length !== 3 || b.length !== 3) throw new Error("Solo 3D");
+                return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+            },
+            tripleProductoEscalar: (a, b, c) => {
+                const cross = vectorOperations.productoCruz(b, c);
+                return vectorOperations.productoPunto(a, cross);
+            },
+            tripleProductoVectorialAXBXC: (a, b, c) => {
+                const crossAB = vectorOperations.productoCruz(a, b);
+                return vectorOperations.productoCruz(crossAB, c);
+            },
+            tripleProductoVectorialAXBXC2: (a, b, c) => {
+                const crossBC = vectorOperations.productoCruz(b, c);
+                return vectorOperations.productoCruz(a, crossBC);
+            }
         };
-        
-        // Vector A
-        if (vecA && vecA.length >= 2) {
-            const traceA = {
-                x: [0, vecA[0]], 
-                y: [0, vecA[1]], 
-                mode: 'lines+markers+text',
-                type: 'scatter',
-                line: { color: '#42a5f5', width: 8 },
-                marker: { size: 8 },
-                name: 'Vector A',
-                text: ['', 'A'],
-                textposition: 'top center'
-            };
-            
-            if (vecA.length === 3) {
-                traceA.z = [0, vecA[2]];
-                traceA.type = 'scatter3d';
-            }
-            data.push(traceA);
-        }
-        
-        // Vector B
-        if (vecB && vecB.length >= 2) {
-            const traceB = {
-                x: [0, vecB[0]], 
-                y: [0, vecB[1]], 
-                mode: 'lines+markers+text',
-                type: 'scatter',
-                line: { color: '#ab47bc', width: 8 },
-                marker: { size: 8 },
-                name: 'Vector B',
-                text: ['', 'B'],
-                textposition: 'top center'
-            };
-            
-            if (vecB.length === 3) {
-                traceB.z = [0, vecB[2]];
-                traceB.type = 'scatter3d';
-            }
-            data.push(traceB);
-        }
-        
-        // Vector C
-        if (vecC && vecC.length >= 2) {
-            const traceC = {
-                x: [0, vecC[0]], 
-                y: [0, vecC[1]], 
-                mode: 'lines+markers+text',
-                type: 'scatter',
-                line: { color: '#66bb6a', width: 8 },
-                marker: { size: 8 },
-                name: 'Vector C',
-                text: ['', 'C'],
-                textposition: 'top center'
-            };
-            
-            if (vecC.length === 3) {
-                traceC.z = [0, vecC[2]];
-                traceC.type = 'scatter3d';
-            }
-            data.push(traceC);
-        }
-        
-        // Vector Resultante
-        if (vecR && vecR.length >= 2) {
-            const traceR = {
-                x: [0, vecR[0]], 
-                y: [0, vecR[1]], 
-                mode: 'lines+markers+text',
-                type: 'scatter',
-                line: { color: '#ffeb3b', width: 10 },
-                marker: { size: 10 },
-                name: 'Resultado',
-                text: ['', 'R'],
-                textposition: 'top center'
-            };
-            
-            if (vecR.length === 3) {
-                traceR.z = [0, vecR[2]];
-                traceR.type = 'scatter3d';
-            }
-            data.push(traceR);
-        }
 
-        if (data.some(d => d.type === 'scatter3d')) {
-            layout.scene = { 
-                xaxis: { title: 'X', backgroundcolor: 'rgba(0,0,0,0)' },
-                yaxis: { title: 'Y', backgroundcolor: 'rgba(0,0,0,0)' },
-                zaxis: { title: 'Z', backgroundcolor: 'rgba(0,0,0,0)' },
-                bgcolor: 'rgba(0,0,0,0)',
-                camera: { eye: { x: 1.5, y: 1.5, z: 1.5 } }
+        function plotVectors(vecA, vecB, vecC, vecR) {
+            const data = [];
+            const layout = { 
+                paper_bgcolor:'rgba(0,0,0,0)', 
+                plot_bgcolor:'rgba(0,0,0,0)', 
+                font:{color:'#E0E0E0'}, 
+                margin:{l:50,r:50,b:50,t:50},
+                showlegend: true,
+                autosize: true
             };
-        } else {
-            layout.xaxis = { title: 'X', gridcolor: 'rgba(255,255,255,0.1)' };
-            layout.yaxis = { 
-                title: 'Y', 
-                gridcolor: 'rgba(255,255,255,0.1)',
-                scaleanchor: "x",
-                scaleratio: 1
-            };
-        }
-        
-        const plotContainer = document.getElementById('vectorPlot');
-        Plotly.purge(plotContainer);
-        Plotly.newPlot(plotContainer, data, layout, {
-            responsive: true,
-            displayModeBar: true,
-            displaylogo: false
-        });
-    }
-
-    // --- Manejo del formulario ---
-    document.getElementById('operation').addEventListener('change', function() {
-        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
-        const vectorCGroup = document.getElementById('vectorCGroup');
-        if (tripleOperations.includes(this.value)) {
-            vectorCGroup.style.display = 'block';
-        } else {
-            vectorCGroup.style.display = 'none';
-        }
-    });
-
-    // Manejar envío del formulario - ENVIAR Y GUARDAR
-    document.querySelector('form').addEventListener('submit', function(e) {
-        // NO prevenir el envío aquí - dejar que el formulario se envíe normalmente
-        // Pero primero mostrar la gráfica inmediatamente
-        
-        const formData = new FormData(this);
-        const operation = document.getElementById('operation').value;
-        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
-        
-        try {
-            const a = document.getElementById('vectorA').value.split(',').map(Number);
-            const b = document.getElementById('vectorB').value.split(',').map(Number);
-            let c = [0, 0, 0];
             
-            if (tripleOperations.includes(operation)) {
-                c = document.getElementById('vectorC').value.split(',').map(Number);
-            }
-            
-            // Validaciones
-            if (a.some(isNaN) || b.some(isNaN) || c.some(isNaN)) {
-                throw new Error("Solo números separados por comas");
-            }
-            
-            if (a.length < 2 || b.length < 2 || c.length < 2) {
-                throw new Error("Vectores al menos 2D");
-            }
-            
-            let resVec = null;
-            
-            // Calcular resultado para la gráfica
-            switch(operation) {
-                case 'suma': 
-                    resVec = vectorOperations.suma(a, b); 
-                    break;
-                case 'productoCruz': 
-                    resVec = vectorOperations.productoCruz(a, b); 
-                    break;
-                case 'tripleProductoVectorial': 
-                    resVec = vectorOperations.tripleProductoVectorial(a, b, c); 
-                    break;
-            }
-            
-            // Graficar inmediatamente (antes de que la página se recargue)
-            if (tripleOperations.includes(operation)) {
-                plotVectors(a, b, c, resVec);
-            } else {
-                plotVectors(a, b, null, resVec);
-            }
-            
-            // Agregar un pequeño delay para que la gráfica se renderice antes del envío
-            setTimeout(() => {
-                // El formulario se enviará automáticamente después de este timeout
-            }, 100);
-            
-        } catch(err) {
-            e.preventDefault(); // Solo prevenir envío si hay error
-            const errorMsg = document.getElementById('errorMessage');
-            errorMsg.textContent = "Error: " + err.message;
-            errorMsg.style.display = 'block';
-            plotVectors(null, null, null, null);
-        }
-    });
-
-    // Inicializar
-    document.addEventListener('DOMContentLoaded', function() {
-        const operation = document.getElementById('operation').value;
-        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
-        const vectorCGroup = document.getElementById('vectorCGroup');
-        
-        if (tripleOperations.includes(operation)) {
-            vectorCGroup.style.display = 'block';
-        }
-        
-        // Si hay un resultado del servidor (después del envío), graficarlo
-        <% if (result && formData) { %>
-            setTimeout(() => {
-                try {
-                    const a = '<%= formData.vectorA %>'.split(',').map(Number);
-                    const b = '<%= formData.vectorB %>'.split(',').map(Number);
-                    const operation = '<%= formData.operation %>';
-                    const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
-                    let c = [0, 0, 0];
-                    
-                    if (tripleOperations.includes(operation) && '<%= formData.vectorC %>') {
-                        c = '<%= formData.vectorC %>'.split(',').map(Number);
-                    }
-                    
-                    let resVec = null;
-                    switch(operation) {
-                        case 'suma': 
-                            resVec = vectorOperations.suma(a, b); 
-                            break;
-                        case 'productoCruz': 
-                            resVec = vectorOperations.productoCruz(a, b); 
-                            break;
-                        case 'tripleProductoVectorial': 
-                            resVec = vectorOperations.tripleProductoVectorial(a, b, c); 
-                            break;
-                    }
-                    
-                    if (tripleOperations.includes(operation)) {
-                        plotVectors(a, b, c, resVec);
-                    } else {
-                        plotVectors(a, b, null, resVec);
-                    }
-                } catch(err) {
-                    console.log('Error al graficar resultado del servidor:', err);
+            // Vector A
+            if (vecA && vecA.length >= 2) {
+                const traceA = {
+                    x: [0, vecA[0]], 
+                    y: [0, vecA[1]], 
+                    mode: 'lines+markers+text',
+                    type: 'scatter',
+                    line: { color: '#42a5f5', width: 8 },
+                    marker: { size: 8 },
+                    name: 'Vector A',
+                    text: ['', 'A'],
+                    textposition: 'top center'
+                };
+                
+                if (vecA.length === 3) {
+                    traceA.z = [0, vecA[2]];
+                    traceA.type = 'scatter3d';
                 }
-            }, 500);
-        <% } else { %>
-            // Gráfica vacía inicial
-            plotVectors(null, null, null, null);
-        <% } %>
-    });
-</script>
-    
+                data.push(traceA);
+            }
+            
+            // Vector B
+            if (vecB && vecB.length >= 2) {
+                const traceB = {
+                    x: [0, vecB[0]], 
+                    y: [0, vecB[1]], 
+                    mode: 'lines+markers+text',
+                    type: 'scatter',
+                    line: { color: '#ab47bc', width: 8 },
+                    marker: { size: 8 },
+                    name: 'Vector B',
+                    text: ['', 'B'],
+                    textposition: 'top center'
+                };
+                
+                if (vecB.length === 3) {
+                    traceB.z = [0, vecB[2]];
+                    traceB.type = 'scatter3d';
+                }
+                data.push(traceB);
+            }
+            
+            // Vector C
+            if (vecC && vecC.length >= 2) {
+                const traceC = {
+                    x: [0, vecC[0]], 
+                    y: [0, vecC[1]], 
+                    mode: 'lines+markers+text',
+                    type: 'scatter',
+                    line: { color: '#66bb6a', width: 8 },
+                    marker: { size: 8 },
+                    name: 'Vector C',
+                    text: ['', 'C'],
+                    textposition: 'top center'
+                };
+                
+                if (vecC.length === 3) {
+                    traceC.z = [0, vecC[2]];
+                    traceC.type = 'scatter3d';
+                }
+                data.push(traceC);
+            }
+            
+            // Vector Resultante
+            if (vecR && vecR.length >= 2) {
+                const traceR = {
+                    x: [0, vecR[0]], 
+                    y: [0, vecR[1]], 
+                    mode: 'lines+markers+text',
+                    type: 'scatter',
+                    line: { color: '#ffeb3b', width: 10 },
+                    marker: { size: 10 },
+                    name: 'Resultado',
+                    text: ['', 'R'],
+                    textposition: 'top center'
+                };
+                
+                if (vecR.length === 3) {
+                    traceR.z = [0, vecR[2]];
+                    traceR.type = 'scatter3d';
+                }
+                data.push(traceR);
+            }
+
+            if (data.some(d => d.type === 'scatter3d')) {
+                layout.scene = { 
+                    xaxis: { title: 'X', backgroundcolor: 'rgba(0,0,0,0)' },
+                    yaxis: { title: 'Y', backgroundcolor: 'rgba(0,0,0,0)' },
+                    zaxis: { title: 'Z', backgroundcolor: 'rgba(0,0,0,0)' },
+                    bgcolor: 'rgba(0,0,0,0)',
+                    camera: { eye: { x: 1.5, y: 1.5, z: 1.5 } }
+                };
+            } else {
+                layout.xaxis = { title: 'X', gridcolor: 'rgba(255,255,255,0.1)' };
+                layout.yaxis = { 
+                    title: 'Y', 
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    scaleanchor: "x",
+                    scaleratio: 1
+                };
+            }
+            
+            const plotContainer = document.getElementById('vectorPlot');
+            Plotly.purge(plotContainer);
+            Plotly.newPlot(plotContainer, data, layout, {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false
+            });
+        }
+
+        // --- Manejo del formulario ---
+        document.getElementById('operation').addEventListener('change', function() {
+            const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+            const vectorCGroup = document.getElementById('vectorCGroup');
+            const tripleTypeGroup = document.getElementById('tripleTypeGroup');
+            
+            if (tripleOperations.includes(this.value)) {
+                vectorCGroup.style.display = 'block';
+                if (this.value === 'tripleProductoVectorial') {
+                    tripleTypeGroup.style.display = 'block';
+                } else {
+                    tripleTypeGroup.style.display = 'none';
+                }
+            } else {
+                vectorCGroup.style.display = 'none';
+                tripleTypeGroup.style.display = 'none';
+            }
+        });
+
+        // Manejar envío del formulario - ENVIAR Y GUARDAR
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const formData = new FormData(this);
+            const operation = document.getElementById('operation').value;
+            const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+            
+            try {
+                const a = document.getElementById('vectorA').value.split(',').map(Number);
+                const b = document.getElementById('vectorB').value.split(',').map(Number);
+                let c = [0, 0, 0];
+                
+                if (tripleOperations.includes(operation)) {
+                    c = document.getElementById('vectorC').value.split(',').map(Number);
+                }
+                
+                // Validaciones
+                if (a.some(isNaN) || b.some(isNaN) || c.some(isNaN)) {
+                    throw new Error("Solo números separados por comas");
+                }
+                
+                if (a.length < 2 || b.length < 2 || c.length < 2) {
+                    throw new Error("Vectores al menos 2D");
+                }
+                
+                // Validación específica para ángulo con vectores nulos
+                if (operation === 'angulo') {
+                    const magA = Math.sqrt(a.reduce((sum, v) => sum + v*v, 0));
+                    const magB = Math.sqrt(b.reduce((sum, v) => sum + v*v, 0));
+                    if (magA === 0 || magB === 0) {
+                        throw new Error("Ángulo indeterminado");
+                    }
+                }
+                
+                let resVec = null;
+                
+                // Calcular resultado para la gráfica
+                switch(operation) {
+                    case 'suma': 
+                        resVec = vectorOperations.suma(a, b); 
+                        break;
+                    case 'productoCruz': 
+                        resVec = vectorOperations.productoCruz(a, b); 
+                        break;
+                    case 'tripleProductoVectorial': 
+                        const tripleType = document.getElementById('tripleType').value;
+                        if (tripleType === 'axbxc') {
+                            resVec = vectorOperations.tripleProductoVectorialAXBXC(a, b, c);
+                        } else {
+                            resVec = vectorOperations.tripleProductoVectorialAXBXC2(a, b, c);
+                        }
+                        break;
+                }
+                
+                // Graficar inmediatamente (antes de que la página se recargue)
+                if (tripleOperations.includes(operation)) {
+                    plotVectors(a, b, c, resVec);
+                } else {
+                    plotVectors(a, b, null, resVec);
+                }
+                
+                // Agregar un pequeño delay para que la gráfica se renderice antes del envío
+                setTimeout(() => {
+                    // El formulario se enviará automáticamente después de este timeout
+                }, 100);
+                
+            } catch(err) {
+                e.preventDefault(); // Solo prevenir envío si hay error
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = "Error: " + err.message;
+                errorMsg.style.display = 'block';
+                plotVectors(null, null, null, null);
+            }
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            const operation = document.getElementById('operation').value;
+            const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+            const vectorCGroup = document.getElementById('vectorCGroup');
+            const tripleTypeGroup = document.getElementById('tripleTypeGroup');
+            
+            if (tripleOperations.includes(operation)) {
+                vectorCGroup.style.display = 'block';
+                if (operation === 'tripleProductoVectorial') {
+                    tripleTypeGroup.style.display = 'block';
+                }
+            }
+            
+            // Si hay un resultado del servidor (después del envío), graficarlo
+            <% if (result && formData) { %>
+                setTimeout(() => {
+                    try {
+                        const a = '<%= formData.vectorA %>'.split(',').map(Number);
+                        const b = '<%= formData.vectorB %>'.split(',').map(Number);
+                        const operation = '<%= formData.operation %>';
+                        const tripleOperations = ['tripleProductoEscalar', 'tripleProductoVectorial'];
+                        let c = [0, 0, 0];
+                        
+                        if (tripleOperations.includes(operation) && '<%= formData.vectorC %>') {
+                            c = '<%= formData.vectorC %>'.split(',').map(Number);
+                        }
+                        
+                        let resVec = null;
+                        switch(operation) {
+                            case 'suma': 
+                                resVec = vectorOperations.suma(a, b); 
+                                break;
+                            case 'productoCruz': 
+                                resVec = vectorOperations.productoCruz(a, b); 
+                                break;
+                            case 'tripleProductoVectorial': 
+                                const tripleType = '<%= formData.tripleType || "axbxc2" %>';
+                                if (tripleType === 'axbxc') {
+                                    resVec = vectorOperations.tripleProductoVectorialAXBXC(a, b, c);
+                                } else {
+                                    resVec = vectorOperations.tripleProductoVectorialAXBXC2(a, b, c);
+                                }
+                                break;
+                        }
+                        
+                        if (tripleOperations.includes(operation)) {
+                            plotVectors(a, b, c, resVec);
+                        } else {
+                            plotVectors(a, b, null, resVec);
+                        }
+                    } catch(err) {
+                        console.log('Error al graficar resultado del servidor:', err);
+                    }
+                }, 500);
+            <% } else { %>
+                // Gráfica vacía inicial
+                plotVectors(null, null, null, null);
+            <% } %>
+        });
+    </script>
 </body>
 </html>

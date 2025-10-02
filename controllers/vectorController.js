@@ -8,9 +8,12 @@ const vectorOperations = {
     const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
     const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+    
+    // Verificar si algún vector es nulo
     if (magnitudeA === 0 || magnitudeB === 0) {
-      throw new Error('No se puede calcular el ángulo con vectores nulos');
+      throw new Error('Ángulo indeterminado');
     }
+    
     const cosTheta = dotProduct / (magnitudeA * magnitudeB);
     const clamped = Math.max(-1, Math.min(1, cosTheta));
     return Math.acos(clamped) * (180 / Math.PI);
@@ -30,7 +33,11 @@ const vectorOperations = {
     const crossBC = vectorOperations.productoCruz(b, c);
     return vectorOperations.productoPunto(a, crossBC);
   },
-  tripleProductoVectorial: (a, b, c) => {
+  tripleProductoVectorialAXBXC: (a, b, c) => {
+    const crossAB = vectorOperations.productoCruz(a, b);
+    return vectorOperations.productoCruz(crossAB, c);
+  },
+  tripleProductoVectorialAXBXC2: (a, b, c) => {
     const crossBC = vectorOperations.productoCruz(b, c);
     return vectorOperations.productoCruz(a, crossBC);
   }
@@ -42,13 +49,14 @@ exports.getVectors = (req, res) => {
     user: req.session.user,
     result: null,
     operation: null,
+    tripleType: null,
     formData: {},
     error: null
   });
 };
 
 exports.calculateVector = async (req, res) => {
-  const { vectorA, vectorB, vectorC, operation } = req.body;
+  const { vectorA, vectorB, vectorC, operation, tripleType } = req.body;
   const user_id = req.session.user.id;
 
   const a = vectorA.split(',').map(Number);
@@ -66,8 +74,26 @@ exports.calculateVector = async (req, res) => {
       error: 'Los vectores deben contener solo números separados por comas',
       formData: req.body,
       result: null,
-      operation: null
+      operation: null,
+      tripleType: null
     });
+  }
+
+  // Verificar si algún vector es nulo para ángulo
+  if (operation === 'angulo') {
+    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+    if (magnitudeA === 0 || magnitudeB === 0) {
+      return res.render('vectors', {
+        title: 'Operaciones con Vectores',
+        user: req.session.user,
+        error: 'Ángulo indeterminado - no se puede calcular con vectores nulos',
+        formData: req.body,
+        result: null,
+        operation: null,
+        tripleType: null
+      });
+    }
   }
 
   if (requires3D.includes(operation) && (a.length !== 3 || b.length !== 3)) {
@@ -77,7 +103,8 @@ exports.calculateVector = async (req, res) => {
       error: 'Esta operación requiere vectores de 3 dimensiones',
       formData: req.body,
       result: null,
-      operation: null
+      operation: null,
+      tripleType: null
     });
   }
 
@@ -89,7 +116,8 @@ exports.calculateVector = async (req, res) => {
         error: 'Esta operación requiere un tercer vector C',
         formData: req.body,
         result: null,
-        operation: null
+        operation: null,
+        tripleType: null
       });
     }
     c = vectorC.split(',').map(Number);
@@ -100,7 +128,8 @@ exports.calculateVector = async (req, res) => {
         error: 'El vector C debe contener solo 3 números separados por comas',
         formData: req.body,
         result: null,
-        operation: null
+        operation: null,
+        tripleType: null
       });
     }
   }
@@ -112,7 +141,8 @@ exports.calculateVector = async (req, res) => {
       error: 'Los vectores A y B deben tener la misma dimensión',
       formData: req.body,
       result: null,
-      operation: null
+      operation: null,
+      tripleType: null
     });
   }
 
@@ -141,8 +171,13 @@ exports.calculateVector = async (req, res) => {
         resultText = `Triple Producto Escalar (A·(B×C)): ${result}`;
         break;
       case 'tripleProductoVectorial':
-        result = vectorOperations.tripleProductoVectorial(a, b, c);
-        resultText = `Triple Producto Vectorial (A×(B×C)): [${result.join(', ')}]`;
+        if (tripleType === 'axbxc') {
+          result = vectorOperations.tripleProductoVectorialAXBXC(a, b, c);
+          resultText = `Triple Producto Vectorial ((A×B)×C): [${result.join(', ')}]`;
+        } else {
+          result = vectorOperations.tripleProductoVectorialAXBXC2(a, b, c);
+          resultText = `Triple Producto Vectorial (A×(B×C)): [${result.join(', ')}]`;
+        }
         break;
       default:
         return res.render('vectors', {
@@ -151,7 +186,8 @@ exports.calculateVector = async (req, res) => {
           error: 'Operación no válida',
           formData: req.body,
           result: null,
-          operation: null
+          operation: null,
+          tripleType: null
         });
     }
   } catch (err) {
@@ -161,7 +197,8 @@ exports.calculateVector = async (req, res) => {
       error: err.message,
       formData: req.body,
       result: null,
-      operation: null
+      operation: null,
+      tripleType: null
     });
   }
 
@@ -174,6 +211,9 @@ exports.calculateVector = async (req, res) => {
   };
   if (tripleOps.includes(operation)) {
     operationData.vector_c = vectorC;
+    if (operation === 'tripleProductoVectorial') {
+      operationData.triple_type = tripleType;
+    }
   }
 
   try {
@@ -184,7 +224,14 @@ exports.calculateVector = async (req, res) => {
       user: req.session.user,
       result: resultText,
       operation,
-      formData: { vectorA, vectorB, vectorC: vectorC || '', operation },
+      tripleType: tripleType || null,
+      formData: { 
+        vectorA, 
+        vectorB, 
+        vectorC: vectorC || '', 
+        operation,
+        tripleType: tripleType || ''
+      },
       error: null
     });
   } catch (err) {
@@ -217,6 +264,9 @@ exports.generatePDF = async (req, res) => {
     doc.fontSize(20).text('Operación con Vectores', { align: 'center' });
     doc.moveDown();
     doc.fontSize(12).text(`Tipo de operación: ${operation.operation_type}`);
+    if (operation.triple_type) {
+      doc.text(`Variante: ${operation.triple_type === 'axbxc' ? '(A×B)×C' : 'A×(B×C)'}`);
+    }
     doc.text(`Vector A: ${operation.vector_a}`);
     doc.text(`Vector B: ${operation.vector_b}`);
     if (operation.vector_c) doc.text(`Vector C: ${operation.vector_c}`);
