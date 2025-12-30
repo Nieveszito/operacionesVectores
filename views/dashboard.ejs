@@ -3,158 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido</title>
+    <title>Dashboard | VectorSys</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };</script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        :root {
+            --bg-dark: #050505;
+            --glass-panel: rgba(20, 20, 24, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            
+            /* Colores */
+            --color-grad: #a855f7;  /* Morado */
+            --color-div: #3b82f6;   /* Azul */
+            --color-rot: #f59e0b;   /* Naranja */
+            --color-ops: #10b981;   /* Verde */
+            --color-hist: #ec4899;  /* Rosa */
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; } /* SCROLL SUAVE */
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
-            margin: 0;
-            padding: 0;
-            color: #E0E0E0;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
             min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 80px;
         }
 
-        .background-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
+        /* --- LUCES DE FONDO --- */
+        .ambient-glow { position: fixed; top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
+        .ambient-glow-2 { position: fixed; bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
 
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(50px);
-            animation: float 25s infinite ease-in-out alternate;
+        /* --- NAVBAR ISLAND --- */
+        .navbar-island {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+            padding: 8px 12px;
+            display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: 0.3s ease;
         }
+        .navbar-island:hover { transform: translateX(-50%) translateY(2px); }
+        .nav-btn { color: var(--text-muted); text-decoration: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1rem; }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn.active { background: #fff; color: #000; }
+        .nav-btn.close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
 
-        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 15%; background: rgba(0, 0, 139, 0.3); }
-        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 80%; background: rgba(75, 0, 130, 0.3); }
-        .shape:nth-child(3) { width: 100px; height: 100px; top: 40%; left: 50%; background: rgba(0, 191, 255, 0.2); }
-        .shape:nth-child(4) { width: 180px; height: 180px; top: 20%; left: 60%; background: rgba(123, 104, 238, 0.3); }
-        .shape:nth-child(5) { width: 120px; height: 120px; top: 85%; left: 20%; background: rgba(0, 0, 205, 0.3); }
+        .container { width: 90%; max-width: 1100px; margin: 100px auto 0; animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        @keyframes float {
-            0% { transform: translate(0,0) scale(1); }
-            50% { transform: translate(20px,30px) scale(1.1); }
-            100% { transform: translate(0,0) scale(1); }
+        /* HERO */
+        .hero-section { text-align: center; margin-bottom: 50px; }
+        .welcome-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .hero-title { font-size: 2.5rem; font-weight: 700; margin: 0; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+
+        /* --- SEPARADORES --- */
+        .section-header {
+            margin: 60px 0 25px 0;
+            display: flex; align-items: center; gap: 15px;
+            scroll-margin-top: 100px; 
         }
-
-        header, footer {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 15px 30px;
-            text-align: center;
-            color: #F8F8F8;
+        .section-title {
+            font-size: 1.1rem; font-weight: 600; color: #fff;
+            text-transform: uppercase; letter-spacing: 1.2px; margin: 0;
+            display: flex; align-items: center; gap: 10px;
         }
+        .section-line { flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent); }
 
-        header h1, footer p { margin: 0; }
+        /* GRIDS & CARDS */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 
-        .container {
-            flex: 1;
-            width: 90%;
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 30px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
-            text-align: center;
+        .tool-card {
+            background: var(--glass-panel); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 30px 25px; text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between;
+            min-height: 200px;
         }
+        .tool-card:hover { transform: translateY(-5px); background: rgba(30, 30, 35, 0.8); border-color: rgba(255,255,255,0.2); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
 
-        .dashboard-cards {
-            display: flex;
-            gap: 25px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 30px;
-        }
+        .card-icon-wrapper { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 15px; transition: 0.3s; }
+        .card-content h3 { font-size: 1.2rem; margin: 0 0 6px 0; color: #fff; font-weight: 600; }
+        .card-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+        .card-arrow { position: absolute; bottom: 25px; right: 25px; opacity: 0; transform: translateX(-10px); transition: 0.3s; color: #fff; }
+        .tool-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
 
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 20px;
-            width: 250px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
+        /* ESTILOS DE COLORES ESPECÍFICOS */
+        /* Diferencial (Morado/Azul/Naranja) */
+        .card-grad .card-icon-wrapper { background: rgba(168, 85, 247, 0.1); color: var(--color-grad); }
+        .card-grad:hover { border-top: 1px solid var(--color-grad); }
+        .card-div .card-icon-wrapper { background: rgba(59, 130, 246, 0.1); color: var(--color-div); }
+        .card-div:hover { border-top: 1px solid var(--color-div); }
+        .card-rot .card-icon-wrapper { background: rgba(245, 158, 11, 0.1); color: var(--color-rot); }
+        .card-rot:hover { border-top: 1px solid var(--color-rot); }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
-        }
+        /* Integral (Rojo/Naranja/Oro/Violeta) */
+        .card-vis:hover { border-top: 1px solid #ef4444; } /* Rojo */
+        .card-int:hover { border-top: 1px solid #f97316; } /* Naranja */
+        .card-int-line:hover { border-top: 1px solid #eab308; } /* Oro */
+        .card-int-triple:hover { border-top: 1px solid #8b5cf6; } /* Violeta */
 
-        .card h3 { margin-top: 0; color: #BBDEFB; }
-        .card p { color: #E0E0E0; margin-bottom: 15px; }
-        .card .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 10px;
-            background: rgba(156,39,176,0.8);
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .card .btn:hover {
-            background: #7B1FA2;
-            transform: translateY(-2px);
-        }
+        /* Álgebra (Verde/Cyan/Rosa) */
+        .card-ops:hover { border-top: 1px solid #10b981; }
+        .card-ops .card-icon-wrapper { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .card-dot:hover { border-top: 1px solid #06b6d4; }
+        .card-dot .card-icon-wrapper { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+        .card-cross:hover { border-top: 1px solid #f43f5e; }
+        .card-cross .card-icon-wrapper { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
 
-        @media(max-width:768px){
-            .dashboard-cards { flex-direction: column; align-items: center; }
-            .card { width: 90%; }
-        }
+        /* Utilidades */
+        .card-hist:hover { border-top: 1px solid #ec4899; }
+        .card-hist .card-icon-wrapper { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <div class="background-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
 
-    <header style="display:flex; justify-content: space-between; align-items: center; padding: 15px 30px;">
-    <h1>Bienvenido</h1>
-    <a href="/logout" 
-       style="padding: 10px 20px; background: rgba(156,39,176,0.8); color: #fff; border-radius: 10px; text-decoration:none; font-weight:500; transition: all 0.3s ease;">
-       Cerrar Sesión
-    </a>
-</header>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <nav class="navbar-island">
+        <a href="#" class="nav-btn active" title="Inicio"><i class="fa-solid fa-house"></i></a>
+        <div class="divider"></div>
+        <a href="#calculo" class="nav-btn" title="Cálculo Diferencial"><i class="fa-solid fa-wave-square"></i></a>
+        <a href="#integrales" class="nav-btn" title="Integrales"><i class="fa-solid fa-chart-area"></i></a>
+        <a href="#algebra" class="nav-btn" title="Álgebra"><i class="fa-solid fa-vector-square"></i></a>
+        <a href="#utilidades" class="nav-btn" title="Historial"><i class="fa-solid fa-clock-rotate-left"></i></a>
+        <div class="divider"></div>
+        <a href="/logout" class="nav-btn close" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </nav>
 
     <div class="container">
-        <h2>Hola, <%= user.username %></h2>
-        <div class="dashboard-cards">
-            <div class="card">
-                <h3>Operaciones con Vectores</h3>
-                <p>Realiza diferentes operaciones con vectores</p>
-                <a href="/vectors" class="btn">Ir a Operaciones</a>
-            </div>
-            <div class="card">
-                <h3>Historial</h3>
-                <p>Revisa tu historial de operaciones</p>
-                <a href="/history" class="btn">Ver Historial</a>
-            </div>
+        
+        <div class="hero-section">
+            <div class="welcome-badge"><i class="fa-solid fa-user-astronaut"></i> Sesión Activa</div>
+            <h1 class="hero-title">Hola, <%= user.username %></h1>
         </div>
-    </div>
 
-    <footer>
-        <p>CALCULADORA DE VECTORES</p>
-    </footer>
+        <div id="calculo" class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-wave-square" style="color:#a855f7;"></i> Cálculo Diferencial</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="dashboard-grid">
+            <a href="/gradient" class="tool-card card-grad">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div class="card-content"><h3>Gradiente</h3><p>Máximo crecimiento $\nabla f$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/divergence" class="tool-card card-div">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-maximize"></i></div>
+                <div class="card-content"><h3>Divergencia</h3><p>Flujo neto $\nabla \cdot \vec{F}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/rotacional" class="tool-card card-rot">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-rotate"></i></div>
+                <div class="card-content"><h3>Rotacional</h3><p>Tendencia de giro $\nabla \times \vec{F}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+        </div>
+
+        <div id="integrales" class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-chart-area" style="color:#ef4444;"></i> Integración y Gráficas</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="dashboard-grid">
+            <a href="/visualizer" class="tool-card card-vis">
+                <div><div class="card-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i class="fa-solid fa-globe"></i></div>
+                <div class="card-content"><h3>Visualizador</h3><p>Campos vectoriales y escalares 3D.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/double-integral" class="tool-card card-int">
+                <div><div class="card-icon-wrapper" style="background: rgba(249, 115, 22, 0.1); color: #f97316;"><i class="fa-solid fa-draw-polygon"></i></div>
+                <div class="card-content"><h3>Integral Doble</h3><p>Volumen bajo superficie $\iint f dA$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/line-integral" class="tool-card card-int-line">
+                <div><div class="card-icon-wrapper" style="background: rgba(234, 179, 8, 0.1); color: #eab308;"><i class="fa-solid fa-wave-square"></i></div>
+                <div class="card-content"><h3>Integral de Línea</h3><p>Trabajo $\int \vec{F} \cdot d\vec{r}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/triple-integral" class="tool-card card-int-triple">
+                <div><div class="card-icon-wrapper" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="fa-solid fa-cube"></i></div>
+                <div class="card-content"><h3>Integral Triple</h3><p>Masa y volumen $\iiint f dV$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+        </div>
+
+        <div id="algebra" class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-vector-square" style="color:#10b981;"></i> Álgebra Vectorial</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="dashboard-grid">
+            <a href="/vector-sum" class="tool-card card-ops">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-plus-minus"></i></div>
+                <div class="card-content"><h3>Suma y Resta</h3><p>Operaciones lineales $\vec{A} \pm \vec{B}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/vector-dot" class="tool-card card-dot">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-circle-dot"></i></div>
+                <div class="card-content"><h3>Producto Punto</h3><p>Escalar y Ángulos $\vec{A} \cdot \vec{B}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+            <a href="/vector-cross" class="tool-card card-cross">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-xmark"></i></div>
+                <div class="card-content"><h3>Producto Cruz</h3><p>Vector perpendicular $\vec{A} \times \vec{B}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+        </div>
+
+        <div id="utilidades" class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-layer-group" style="color:#ec4899;"></i> Utilidades</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="dashboard-grid">
+            <a href="/history" class="tool-card card-hist">
+                <div><div class="card-icon-wrapper"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="card-content"><h3>Historial</h3><p>Registro de cálculos realizados.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+        </div>
+
+    </div>
 </body>
 </html>

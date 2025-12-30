@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Campos | VectorSys</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };</script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+    <style>
+        :root { --bg-dark: #050505; --glass-panel: rgba(20, 20, 24, 0.7); --glass-border: rgba(255, 255, 255, 0.08); --accent-primary: #ef4444; --text-main: #ffffff; --text-muted: #94a3b8; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
+        .ambient-glow { position: fixed; top: -20%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
+        
+        .navbar-island { position: fixed; top: 20px; z-index: 100; background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 100px; padding: 8px 12px; display: flex; gap: 8px; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .nav-btn { color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; text-decoration: none; }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn.active { background: #fff; color: #000; }
+        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+
+        .main-container { width: 95%; max-width: 1300px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; margin-top: 100px; margin-bottom: 50px; animation: fadeUp 0.8s ease; }
+        @media (max-width: 900px) { .main-container { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--glass-panel); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+        
+        .input-group { margin-bottom: 20px; }
+        .label-text { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        .modern-input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; transition: 0.3s; }
+        .modern-input:focus { border-color: var(--accent-primary); outline: none; }
+        .btn-primary { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+        .type-switcher { display: flex; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 12px; margin-bottom: 25px; }
+        .switch-btn { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted); transition: 0.3s; }
+        .switch-btn.active { background: var(--accent-primary); color: #fff; font-weight: 600; }
+
+        #plotDiv { width: 100%; height: 600px; border-radius: 20px; overflow: hidden; }
+
+        /* ESTILOS DEL ESTADO VACÍO */
+        .empty-container { text-align: center; color: var(--text-muted); padding: 40px; }
+        .empty-icon { font-size: 5rem; margin-bottom: 20px; color: var(--accent-primary); animation: pulse 3s infinite ease-in-out; text-shadow: 0 0 30px rgba(239, 68, 68, 0.4); }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <nav class="navbar-island">
+        <a href="/dashboard" class="nav-btn"><i class="fa-solid fa-house"></i></a>
+        <div class="divider"></div>
+        <a href="/dashboard#integrales" class="nav-btn active"><i class="fa-solid fa-globe"></i></a>
+        <a href="/history" class="nav-btn"><i class="fa-solid fa-clock-rotate-left"></i></a>
+        <div class="divider"></div>
+        <a href="/logout" class="nav-btn close"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </nav>
+
+    <div class="main-container">
+        <div class="panel" style="justify-content: flex-start;">
+            <h2 style="margin:0 0 20px 0;">Configuración</h2>
+            <div class="type-switcher">
+                <div class="switch-btn <%= (!type || type==='scalar') ? 'active' : '' %>" onclick="setType('scalar')">Escalar</div>
+                <div class="switch-btn <%= (type==='vector') ? 'active' : '' %>" onclick="setType('vector')">Vectorial</div>
+            </div>
+
+            <form action="/visualizer" method="POST">
+                <input type="hidden" name="type" id="inputType" value="<%= type || 'scalar' %>">
+                <div id="scalarInputs" style="<%= type === 'vector' ? 'display:none' : 'display:block' %>">
+                    <div class="input-group">
+                        <label class="label-text">Función $z = f(x,y)$</label>
+                        <input type="text" class="modern-input" name="funcZ" value="<%= funcZ || 'sin(x)*cos(y)' %>" placeholder="Ej: x^2 + y^2">
+                    </div>
+                </div>
+                <div id="vectorInputs" style="<%= type !== 'vector' ? 'display:none' : 'display:block' %>">
+                    <div class="input-group"><label class="label-text">P (i)</label><input type="text" class="modern-input" name="funcP" value="<%= funcP || '-y' %>"></div>
+                    <div class="input-group"><label class="label-text">Q (j)</label><input type="text" class="modern-input" name="funcQ" value="<%= funcQ || 'x' %>"></div>
+                    <div class="input-group"><label class="label-text">R (k)</label><input type="text" class="modern-input" name="funcR" value="<%= funcR || 'z/2' %>"></div>
+                </div>
+                <div class="input-group"><label class="label-text">Rango</label><input type="number" class="modern-input" name="range" value="<%= range || 5 %>" min="1" max="20"></div>
+                <button type="submit" class="btn-primary">Graficar</button>
+            </form>
+        </div>
+
+        <div class="panel" style="padding: 10px;">
+            <% if (xData && xData.length > 0) { %>
+                <div id="plotDiv"></div>
+            <% } else { %>
+                <div class="empty-container">
+                    <i class="fa-solid fa-globe empty-icon"></i>
+                    <h2 style="margin-bottom: 10px;">Visualizador 3D</h2>
+                    <p>Ingresa una función o campo vectorial para generar la gráfica.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        function setType(type) {
+            document.getElementById('inputType').value = type;
+            document.getElementById('scalarInputs').style.display = type === 'scalar' ? 'block' : 'none';
+            document.getElementById('vectorInputs').style.display = type === 'vector' ? 'block' : 'none';
+            document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        const type = "<%= type || 'scalar' %>";
+        // Si no hay datos, enviamos arrays vacios
+        const xData = JSON.parse('<%- JSON.stringify(xData || []) %>');
+        const yData = JSON.parse('<%- JSON.stringify(yData || []) %>');
+        const zData = JSON.parse('<%- JSON.stringify(zData || []) %>');
+        const uData = JSON.parse('<%- JSON.stringify(uData || []) %>');
+        const vData = JSON.parse('<%- JSON.stringify(vData || []) %>');
+        const wData = JSON.parse('<%- JSON.stringify(wData || []) %>');
+
+        let data = [];
+        let layout = {
+            margin: {l:0, r:0, b:0, t:0},
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            scene: { xaxis: {color:'#fff'}, yaxis: {color:'#fff'}, zaxis: {color:'#fff'}, gridcolor: '#333' },
+            font: { color: '#fff' }
+        };
+
+        if (xData.length > 0) {
+            if (type === 'scalar') {
+                data = [{ z: zData, x: xData, y: yData, type: 'surface', colorscale: 'Viridis', contours: { z: { show: true, usecolormap: true, highlightcolor: "#limegreen", project: { z: true } } } }];
+            } else {
+                data = [{ type: 'cone', x: xData.flat(), y: yData.flat(), z: zData.flat(), u: uData.flat(), v: vData.flat(), w: wData.flat(), sizemode: 'scaled', sizeref: 2, colorscale: 'Portland', anchor: 'tail' }];
+            }
+            Plotly.newPlot('plotDiv', data, layout, {responsive: true});
+        }
+    </script>
+</body>
+</html>

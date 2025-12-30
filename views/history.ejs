@@ -3,292 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Operaciones</title>
+    <title>Historial | VectorSys</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        :root {
+            --bg-dark: #050505;
+            --glass-panel: rgba(20, 20, 24, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #ec4899;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
 
+        * { box-sizing: border-box; }
+        
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
-            margin: 0;
-            padding: 0;
-            color: #E0E0E0;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
             min-height: 100vh;
+            overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .background-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
+        .ambient-glow {
+            position: fixed; top: -10%; left: 20%; width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
+            filter: blur(80px); z-index: -1; pointer-events: none;
         }
 
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(50px);
-            animation: float 25s infinite ease-in-out alternate;
+        /* NAVBAR */
+        .navbar-island {
+            position: fixed; top: 20px; z-index: 100;
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+            padding: 8px 12px; display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); transition: transform 0.3s ease;
         }
-
-        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 15%; background: rgba(0, 0, 139, 0.3); }
-        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 80%; background: rgba(75, 0, 130, 0.3); }
-        .shape:nth-child(3) { width: 100px; height: 100px; top: 40%; left: 50%; background: rgba(0, 191, 255, 0.2); }
-        .shape:nth-child(4) { width: 180px; height: 180px; top: 20%; left: 60%; background: rgba(123, 104, 238, 0.3); }
-        .shape:nth-child(5) { width: 120px; height: 120px; top: 85%; left: 20%; background: rgba(0, 0, 205, 0.3); }
-
-        @keyframes float {
-            0% { transform: translate(0,0) scale(1); }
-            50% { transform: translate(20px,30px) scale(1.1); }
-            100% { transform: translate(0,0) scale(1); }
+        .navbar-island:hover { transform: translateY(2px); }
+        .nav-btn {
+            color: var(--text-muted); text-decoration: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; font-size: 1rem;
         }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn.active { background: #fff; color: #000; }
+        .nav-btn.close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
 
-        header, footer {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 15px 30px;
-            text-align: center;
-            color: #F8F8F8;
-        }
-
-        header h1, footer p { margin: 0; }
-
+        /* CONTAINER */
         .container {
-            flex: 1;
-            width: 90%;
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 30px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            width: 95%; max-width: 1200px;
+            margin-top: 100px; margin-bottom: 50px;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        h2 { text-align: center; color: #BBDEFB; margin-top: 0; }
+        .header-section {
+            display: flex; justify-content: space-between; align-items: end;
+            margin-bottom: 30px; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 20px;
+        }
+        .page-title h1 { margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
+        .page-title span { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        .alert.success {
-            background: rgba(0,191,255,0.2);
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #00BFFF;
+        /* TABLA */
+        .table-container {
+            background: var(--glass-panel); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
+        .custom-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .custom-table th {
+            text-align: left; padding: 20px 25px; color: var(--text-muted);
+            font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;
+            border-bottom: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);
+        }
+        .custom-table td { padding: 20px 25px; border-bottom: 1px solid var(--glass-border); vertical-align: middle; color: #fff; }
+        .custom-table tbody tr { transition: 0.2s; }
+        .custom-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .custom-table tbody tr:last-child td { border-bottom: none; }
 
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            color: #E0E0E0;
-            font-size: 0.9em;
-        }
-
-        .history-table th, .history-table td {
-            padding: 12px 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-            word-wrap: break-word;
-        }
-
-        .history-table th {
-            background: rgba(156,39,176,0.6);
-            color: #FFFFFF;
-        }
-
-        .history-table tr:nth-child(even) {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 8px 12px;
-            border-radius: 10px;
-            background: rgba(156,39,176,0.8);
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-        }
-        .btn:hover {
-            background: #7B1FA2;
-            transform: translateY(-2px);
-        }
-
-        .delete-btn {
-            background: rgba(255,0,0,0.6) !important;
-            padding: 8px 12px;
-            border-radius: 10px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: all 0.3s ease;
-        }
-        .delete-btn:hover {
-            background: rgba(255,0,0,0.8) !important;
-            transform: translateY(-2px);
-        }
-
-        .back-btn {
-            display: inline-block;
-            background: rgba(255,255,255,0.1);
-            color: #E0E0E0;
-            padding: 10px 20px;
-            border-radius: 10px;
-            text-decoration: none;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-        .back-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
-        }
-
-        header ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            justify-content: space-between;
+        /* --- NUEVO: GRID PARA LOS DATOS DE ENTRADA (SOLUCIÓN AL SOLAPAMIENTO) --- */
+        .input-grid {
+            display: grid;
+            grid-template-columns: auto 1fr; /* Columna 1: Etiqueta (ajustada), Columna 2: Valor (resto) */
+            gap: 8px 12px; /* Espacio vertical 8px, Horizontal 12px */
             align-items: center;
         }
-
-        header ul li {
-            display: inline-block;
+        
+        .input-label {
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap; /* Evita que la etiqueta se rompa */
         }
 
-        .no-data {
-            text-align: center;
-            color: #BBDEFB;
-            font-style: italic;
-            padding: 10px;
+        .vector-font {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+            background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px;
+            border: 1px solid var(--glass-border); color: #e2e8f0;
+            display: inline-block; width: 100%; /* Ocupa el espacio disponible */
         }
 
-        @media(max-width:768px){
-            .history-table {
-                font-size: 0.8em;
-            }
-            .history-table th, .history-table td { 
-                padding: 8px 5px; 
-            }
-            .btn, .delete-btn {
-                padding: 6px 8px;
-                font-size: 0.75em;
-            }
-            header ul {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
+        .date-text { color: var(--text-muted); font-size: 0.85rem; }
 
-        @media(max-width:480px){
-            .container {
-                padding: 15px;
-            }
-            .history-table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
+        /* BADGES */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; }
+        .badge-suma { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-dot { background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-cross { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+        .badge-grad { background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-div  { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-rot  { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-default { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+
+        /* Actions */
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: 0.3s; text-decoration: none; margin-left: 5px; }
+        .btn-pdf { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+        .btn-pdf:hover { background: #fff; color: #000; transform: translateY(-2px); }
+        .btn-del { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .btn-del:hover { background: #ef4444; color: #fff; transform: translateY(-2px); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 4rem; margin-bottom: 20px; animation: float 4s ease-in-out infinite; color: var(--glass-border); }
+        
+        .alert-box { position: fixed; bottom: 30px; right: 30px; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 15px 25px; border-radius: 12px; backdrop-filter: blur(10px); animation: slideInRight 0.5s ease; z-index: 2000; display: flex; align-items: center; gap: 10px; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        @media (max-width: 800px) {
+            .table-container { overflow-x: auto; }
+            .custom-table { min-width: 700px; }
         }
     </style>
 </head>
 <body>
-    <div class="background-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
 
-    <header>
-        <ul>
-            <li><h1>Historial de Operaciones</h1></li>
-            <li><a href="/dashboard" class="back-btn">Regresar al Inicio</a></li>
-        </ul>
-    </header>
+    <div class="ambient-glow"></div>
+
+    <nav class="navbar-island">
+        <a href="/dashboard" class="nav-btn" title="Inicio"><i class="fa-solid fa-house"></i></a>
+        <div class="divider"></div>
+        <a href="/vector-sum" class="nav-btn"><i class="fa-solid fa-plus-minus"></i></a>
+        <a href="/vector-dot" class="nav-btn"><i class="fa-solid fa-circle-dot"></i></a>
+        <a href="/vector-cross" class="nav-btn"><i class="fa-solid fa-xmark"></i></a>
+        <div class="divider"></div>
+        <a href="#" class="nav-btn active"><i class="fa-solid fa-clock-rotate-left"></i></a>
+    </nav>
 
     <div class="container">
+        
         <% if (typeof message !== 'undefined' && message) { %>
-            <div class="alert success">
-                <p><%= message %></p>
+            <div class="alert-box">
+                <i class="fa-solid fa-check-circle"></i> <%= message %>
             </div>
+            <script>setTimeout(() => { document.querySelector('.alert-box').style.display = 'none'; }, 4000);</script>
         <% } %>
 
-        <% if (operations && operations.length > 0) { %>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Operación</th>
-                        <th>Vector A</th>
-                        <th>Vector B</th>
-                        <th>Vector C</th>
-                        <th>Resultado</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% operations.forEach(op => { %>
+        <div class="header-section">
+            <div class="page-title">
+                <span>Registro de Actividad</span>
+                <h1>Historial</h1>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                <i class="fa-solid fa-database"></i> Total: <%= operations ? operations.length : 0 %> registros
+            </div>
+        </div>
+
+        <div class="table-container">
+            <% if (operations && operations.length > 0) { %>
+                <table class="custom-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <% 
-                                    const operationNames = {
-                                        'suma': 'Suma',
-                                        'angulo': 'Ángulo',
-                                        'productoPunto': 'Producto Punto',
-                                        'productoCruz': 'Producto Cruz',
-                                        'tripleProductoEscalar': 'Triple Producto Escalar',
-                                        'tripleProductoVectorial': 'Triple Producto Vectorial'
-                                    };
-                                %>
-                                <%= operationNames[op.operation_type] || op.operation_type %>
-                            </td>
-                            <td><%= op.vector_a %></td>
-                            <td><%= op.vector_b %></td>
-                            <td>
-                                <% if (op.vector_c) { %>
-                                    <%= op.vector_c %>
-                                <% } else { %>
-                                    <span class="no-data">-</span>
-                                <% } %>
-                            </td>
-                            <td style="max-width: 200px;">
-                                <%= op.result %>
-                            </td>
-                            <td><%= new Date(op.created_at).toLocaleString() %></td>
-                            <td style="white-space: nowrap;">
-                                <a href="/download-pdf/<%= op.id %>" class="btn">PDF</a>
-                                <form action="/history/delete/<%= op.id %>" method="POST" style="display:inline; margin-left: 5px;">
-                                    <button type="submit" 
-                                            class="delete-btn"
-                                            onclick="return confirm('¿Seguro que quieres eliminar esta operación?')">
-                                        Eliminar
-                                    </button>
-                                </form>
-                            </td>
+                            <th>Tipo</th>
+                            <th style="min-width: 250px;">Entrada (Datos)</th>
+                            <th>Resultado</th>
+                            <th>Fecha</th>
+                            <th style="text-align: right;">Acciones</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        <% } else { %>
-            <p style="text-align:center; margin-top:20px; color: #BBDEFB;">No hay operaciones en el historial.</p>
-        <% } %>
-    </div>
+                    </thead>
+                    <tbody>
+                        <% operations.forEach(op => { %>
+                            <tr>
+                                <td>
+                                    <% 
+                                        let badgeClass = 'badge-default';
+                                        let icon = 'fa-calculator';
+                                        let label = op.operation_type;
 
-    <footer>
-        <p>CALCULADORA DE VECTORES</p>
-    </footer>
+                                        if(op.operation_type === 'suma' || op.operation_type === 'resta') {
+                                            badgeClass = 'badge-suma'; icon = 'fa-plus-minus'; label = 'Lineal';
+                                        } else if (op.operation_type === 'productoPunto' || op.operation_type === 'angulo') {
+                                            badgeClass = 'badge-dot'; icon = 'fa-circle-dot'; label = 'Punto';
+                                        } else if (op.operation_type === 'productoCruz' || op.operation_type.includes('triple')) {
+                                            badgeClass = 'badge-cross'; icon = 'fa-xmark'; label = 'Vectorial';
+                                        } else if (op.operation_type === 'gradiente') {
+                                            badgeClass = 'badge-grad'; icon = 'fa-arrow-trend-up'; label = 'Gradiente';
+                                        } else if (op.operation_type === 'divergencia') {
+                                            badgeClass = 'badge-div'; icon = 'fa-maximize'; label = 'Divergencia';
+                                        } else if (op.operation_type === 'rotacional') {
+                                            badgeClass = 'badge-rot'; icon = 'fa-rotate'; label = 'Rotacional';
+                                        }
+                                    %>
+                                    <span class="badge <%= badgeClass %>">
+                                        <i class="fa-solid <%= icon %>"></i> <%= label %>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="input-grid">
+                                        <% if (['gradiente','divergencia','rotacional'].includes(op.operation_type)) { %>
+                                            <span class="input-label">Func:</span>
+                                            <span class="vector-font"><%= op.vector_a %></span>
+                                            
+                                            <% if(op.vector_b && op.vector_b !== '0,0,0') { %>
+                                                <span class="input-label">Pto/Q:</span>
+                                                <span class="vector-font"><%= op.vector_b %></span>
+                                            <% } %>
+                                            
+                                            <% if(op.vector_c && op.vector_c !== '0,0,0') { %>
+                                                <span class="input-label">R:</span>
+                                                <span class="vector-font"><%= op.vector_c %></span>
+                                            <% } %>
+
+                                        <% } else { %>
+                                            <span class="input-label">A:</span>
+                                            <span class="vector-font"><%= op.vector_a %></span>
+                                            
+                                            <span class="input-label">B:</span>
+                                            <span class="vector-font"><%= op.vector_b %></span>
+                                        <% } %>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="vector-font" style="color: var(--accent-primary); border-color: rgba(236, 72, 153, 0.3); text-align:center;">
+                                        <%= op.result %>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="date-text">
+                                        <i class="fa-regular fa-calendar" style="margin-right:5px;"></i>
+                                        <%= new Date(op.created_at).toLocaleDateString() %>
+                                    </div>
+                                    <div class="date-text" style="font-size: 0.75rem; opacity: 0.7;">
+                                        <%= new Date(op.created_at).toLocaleTimeString() %>
+                                    </div>
+                                </td>
+
+                                <td style="text-align: right;">
+                                    <a href="/download-pdf/<%= op.id %>" class="action-btn btn-pdf" title="Descargar PDF">
+                                        <i class="fa-solid fa-file-arrow-down"></i>
+                                    </a>
+                                    <form action="/history/delete/<%= op.id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="action-btn btn-del" title="Eliminar" onclick="return confirm('¿Eliminar registro?')">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="fa-solid fa-clock-rotate-left empty-icon"></i>
+                    <h3>Historial Vacío</h3>
+                    <p>No hay registros disponibles.</p>
+                    <a href="/dashboard" style="color: var(--accent-primary); text-decoration: none;">Ir al Dashboard &rarr;</a>
+                </div>
+            <% } %>
+        </div>
+
+    </div>
 </body>
 </html>

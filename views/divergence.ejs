@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divergencia | VectorSys</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --glass-panel: rgba(20, 20, 24, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #3b82f6; /* AZUL */
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            filter: blur(80px); z-index: -1; pointer-events: none;
+        }
+
+        /* NAVBAR */
+        .navbar-island {
+            position: fixed; top: 20px; z-index: 100;
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+            padding: 8px 12px;
+            display: flex; gap: 8px; align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+        }
+        .navbar-island:hover { transform: translateY(2px); }
+        .nav-btn {
+            color: var(--text-muted); text-decoration: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; font-size: 1rem;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn.active { background: #fff; color: #000; }
+        .nav-btn.close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+
+        /* LAYOUT */
+        .main-container {
+            width: 90%; max-width: 1100px;
+            display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px;
+            margin-top: 80px; animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (max-width: 850px) { .main-container { grid-template-columns: 1fr; margin-bottom: 50px; } }
+
+        /* PANELES */
+        .panel {
+            background: var(--glass-panel); backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border); border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4); transition: all 0.4s ease;
+        }
+
+        .panel-header { margin-bottom: 25px; }
+        .panel-title { font-size: 1.5rem; font-weight: 600; margin: 0 0 5px 0; }
+        .panel-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        .input-group { margin-bottom: 25px; }
+        .label-text { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 500; }
+        
+        .math-badge { background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 2px 8px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; }
+
+        .modern-input { width: 100%; padding: 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fff; font-size: 1rem; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .modern-input:focus { outline: none; background: rgba(0,0,0,0.5); border-color: var(--accent-primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        .coords-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .coord-box { text-align: center; }
+
+        .btn-primary { width: 100%; padding: 18px; background: #fff; color: #000; border: none; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.15); }
+
+        .panel-right { position: relative; background: rgba(15, 15, 20, 0.4); border: 1px dashed rgba(255,255,255,0.1); align-items: center; text-align: center; justify-content: center; display: flex; flex-direction: column; }
+        .panel-right.active { background: linear-gradient(145deg, rgba(20,20,24,0.9), rgba(10,10,10,0.95)); border: 1px solid var(--glass-border); border-top: 1px solid rgba(59, 130, 246, 0.5); box-shadow: 0 30px 60px -10px rgba(0,0,0,0.8); animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* --- NUEVA ANIMACIÓN DIVERGENCIA: JELLY FLUIDO --- */
+        .empty-state-icon { 
+            font-size: 4rem; 
+            margin-bottom: 20px; 
+            /* Animación rápida y elástica */
+            animation: jelly-blue 2s infinite; 
+            transform-origin: center;
+        }
+
+        @keyframes jelly-blue {
+            0% { transform: scale(1, 1); color: rgba(255,255,255,0.1); }
+            25% { transform: scale(0.9, 1.1); }
+            50% { 
+                transform: scale(1.1, 0.9); 
+                color: #60a5fa; /* Azul brillante */
+                text-shadow: 0 0 25px rgba(59, 130, 246, 0.9);
+            }
+            75% { transform: scale(0.95, 1.05); }
+            100% { transform: scale(1, 1); color: rgba(255,255,255,0.1); }
+        }
+        /* ------------------------------------------------- */
+        .result-display { width: 100%; text-align: left; }
+        .math-big { font-size: 2.5rem; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; }
+        
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <nav class="navbar-island">
+        <a href="/dashboard" class="nav-btn"><i class="fa-solid fa-house"></i></a>
+        <div class="divider"></div>
+        <a href="/gradient" class="nav-btn"><i class="fa-solid fa-arrow-trend-up"></i></a>
+        <a href="/divergence" class="nav-btn active"><i class="fa-solid fa-maximize"></i></a>
+        <a href="/rotacional" class="nav-btn"><i class="fa-solid fa-rotate"></i></a>
+        <div class="divider"></div>
+        <a href="/dashboard" class="nav-btn close"><i class="fa-solid fa-xmark"></i></a>
+    </nav>
+
+    <div class="main-container">
+        
+        <div class="panel panel-left">
+            <div class="panel-header">
+                <h1 class="panel-title">Divergencia</h1>
+                <span class="panel-subtitle">Calcula el Flujo Neto $\nabla \cdot \vec{F}$</span>
+            </div>
+
+            <form action="/divergence" method="POST">
+                
+                <div class="input-group">
+                    <label class="label-text">
+                        <span>Función Escalar $P(x,y,z)$</span>
+                        <span class="math-badge">Dirección $\hat{i}$</span>
+                    </label>
+                    <input type="text" class="modern-input" name="P" placeholder="Ej: x*y" required value="<%= locals.P || '' %>" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-text">
+                        <span>Función Escalar $Q(x,y,z)$</span>
+                        <span class="math-badge">Dirección $\hat{j}$</span>
+                    </label>
+                    <input type="text" class="modern-input" name="Q" placeholder="Ej: y*z" required value="<%= locals.Q || '' %>" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-text">
+                        <span>Función Escalar $R(x,y,z)$</span>
+                        <span class="math-badge">Dirección $\hat{k}$</span>
+                    </label>
+                    <input type="text" class="modern-input" name="R" placeholder="Ej: z*x" required value="<%= locals.R || '' %>" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-text">Punto de Evaluación $(x_0, y_0, z_0)$</label>
+                    <div class="coords-grid">
+                        <input type="number" step="any" class="modern-input coord-box" name="x0" placeholder="X" required value="<%= locals.x0 || 0 %>">
+                        <input type="number" step="any" class="modern-input coord-box" name="y0" placeholder="Y" required value="<%= locals.y0 || 0 %>">
+                        <input type="number" step="any" class="modern-input coord-box" name="z0" placeholder="Z" required value="<%= locals.z0 || 0 %>">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Calcular <i class="fa-solid fa-bolt" style="margin-left:8px"></i></button>
+            </form>
+        </div>
+
+        <div class="panel panel-right <%= locals.resultado ? 'active' : '' %>">
+            <% if (locals.resultado) { %>
+                <div class="result-display">
+                    <span style="color:var(--accent-primary); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:20px; display:block;">
+                        <i class="fa-solid fa-check-circle"></i> Resultado
+                    </span>
+                    
+                    <div class="math-big">
+                        $$ \nabla \cdot \vec{F} = <%= resultado %> $$
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        Resultado escalar. Indica la tasa de expansión (positivo) o compresión (negativo) del campo en el punto.
+                    </p>
+
+                    <a href="/divergence" style="text-decoration: none; display: inline-block; margin-top: 20px; font-size: 0.8rem; color: #aaa;">
+                        <i class="fa-solid fa-rotate-left"></i> Limpiar datos
+                    </a>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="fa-solid fa-maximize empty-state-icon"></i>
+                    <h3 style="margin:0; font-weight:500;">Divergencia</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; max-width: 200px; margin: 10px auto;">
+                        Introduce las 3 funciones componentes para calcular.
+                    </p>
+                </div>
+            <% } %>
+        </div>
+
+    </div>
+</body>
+</html>

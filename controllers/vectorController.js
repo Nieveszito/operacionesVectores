@@ -1,7 +1,7 @@
 const VectorOperation = require('../models/VectorOperation');
 const PDFDocument = require('pdfkit');
 
-// Definición de operaciones con vectores
+//operaciones con vectores
 const vectorOperations = {
   suma: (a, b) => a.map((val, i) => val + b[i]),
   angulo: (a, b) => {
@@ -9,7 +9,7 @@ const vectorOperations = {
     const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
     
-    // Verificar si algún vector es nulo
+
     if (magnitudeA === 0 || magnitudeB === 0) {
       throw new Error('Ángulo indeterminado');
     }

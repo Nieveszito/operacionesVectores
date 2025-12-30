@@ -1,195 +1,185 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iniciar Sesión</title>
-  <link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      background: linear-gradient(135deg, #1f013d 0%, #00004d 100%);
-      color: #E0E0E0;
-      font-family: "Karla", sans-serif;
-      display: grid;
-      place-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | VectorSys</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    form {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 1.5rem 2rem;
-      border-radius: 12px;
-      max-width: 450px;
-      width: 100%;
-      box-sizing: border-box;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-    }
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --glass-panel: rgba(20, 20, 20, 0.6); /* Más transparencia para ver el fondo */
+            --accent-primary: #d946ef; /* FUCHSIA */
+            --text-main: #ffffff;
+            --text-muted: #e5e7eb;
+        }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 1rem;
-      color: #F8F8F8;
-    }
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 1rem;
-    }
+        /* --- FONDO DE LÁMPARA DE LAVA (PARTÍCULAS) --- */
+        .lava-container {
+            position: absolute; width: 100%; height: 100%;
+            overflow: hidden; z-index: -1; background: #050210;
+        }
 
-    label {
-      font-size: 14px;
-      padding-bottom: 0.5rem;
-      color: #BBDEFB;
-    }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px); /* El secreto del efecto suave */
+            opacity: 0.7;
+            animation: float 20s infinite ease-in-out alternate;
+        }
 
-    input {
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 0.5rem;
-      background: rgba(255, 255, 255, 0.1);
-      color: #E0E0E0;
-    }
+        /* Burbuja 1: Morado Grande */
+        .b1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #7c3aed, #4c1d95);
+            top: -100px; left: -100px;
+            animation-duration: 25s;
+        }
 
-    input:focus {
-      border: 2px solid #9C27B0;
-      outline: none;
-      box-shadow: 0 0 10px rgba(156, 39, 176, 0.6);
-    }
+        /* Burbuja 2: Rosa/Magenta */
+        .b2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #db2777, #be185d);
+            bottom: -50px; right: -50px;
+            animation-duration: 18s; animation-direction: alternate-reverse;
+        }
 
-    input:hover {
-      border: 1.5px solid #9C27B0;
-      cursor: pointer;
-    }
+        /* Burbuja 3: Azul Profundo (Centro) */
+        .b3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #3b82f6, #1d4ed8);
+            top: 40%; left: 40%;
+            opacity: 0.6;
+            animation-duration: 22s;
+        }
 
-    .error-msg, .alert-error {
-      color: #FF5252;
-      font-size: 13px;
-      margin-top: 0.5rem;
-      display: none;
-    }
+        /* Burbuja 4: Pequeña flotante */
+        .b4 {
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            bottom: 20%; left: 20%;
+            animation-duration: 15s;
+        }
 
-    .alert-error {
-      background: rgba(255, 0, 0, 0.2);
-      border: 1px solid #FF5252;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      display: block;
-    }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(50px, -50px) scale(1.1) rotate(20deg); }
+            66% { transform: translate(-30px, 40px) scale(0.9) rotate(-10deg); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+            100% { transform: translate(20px, -20px) scale(1.05) rotate(10deg); }
+        }
 
-    .input-error {
-      border: 1.5px solid #FF5252;
-    }
+        /* --- TARJETA --- */
+        .login-card {
+            width: 100%; max-width: 420px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(25px); /* Efecto vidrio fuerte */
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            animation: fadeIn 1s ease;
+        }
 
-    button {
-      background: rgba(156, 39, 176, 0.8);
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      color: white;
-      width: 100%;
-      transition: all 0.3s ease;
-    }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    button:hover {
-      background: #7B1FA2;
-      transform: translateY(-2px);
-    }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo-icon { font-size: 3.5rem; background: linear-gradient(135deg, #d946ef, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(217, 70, 239, 0.4)); }
+        .title { font-size: 2rem; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; opacity: 0.8; }
 
-    a {
-      display: block;
-      text-align: center;
-      margin-top: 1rem;
-      text-decoration: none;
-      color: #BBDEFB;
-    }
+        /* INPUTS */
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); transition: 0.3s; }
+        
+        .modern-input {
+            width: 100%; padding: 16px 16px 16px 50px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px; color: #fff; font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .modern-input:focus { 
+            border-color: var(--accent-primary); outline: none; 
+            background: rgba(255, 255, 255, 0.12); 
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.2);
+        }
+        .modern-input:focus + .input-icon { color: var(--accent-primary); }
 
-    a:visited {
-      color: #90CAF9;
-    }
-  </style>
+        /* BOTÓN */
+        .btn-submit {
+            width: 100%; padding: 16px; margin-top: 10px;
+            background: linear-gradient(90deg, #d946ef, #7c3aed);
+            border: none; border-radius: 14px;
+            color: #fff; font-weight: 700; font-size: 1.1rem;
+            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(217, 70, 239, 0.4);
+        }
+        .btn-submit:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 25px rgba(217, 70, 239, 0.6); }
+
+        .footer-links { text-align: center; margin-top: 25px; font-size: 0.95rem; color: var(--text-muted); }
+        .footer-links a { color: #fff; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: 0.3s; }
+        .footer-links a:hover { border-bottom-color: #fff; }
+
+        .alert-error { background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ffcece; padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    </style>
 </head>
 <body>
-  <form id="loginForm" action="/login" method="POST" novalidate>
-    <h2>Iniciar Sesión</h2>
 
-    <% if (errors && errors.length > 0) { %>
-      <div class="alert-error">
-        <% errors.forEach(error => { %>
-          <p><%= error.msg %></p>
-        <% }) %>
-      </div>
-    <% } %>
-
-    <div class="form-group">
-      <label for="email">Dirección de correo</label>
-      <input 
-        type="email" 
-        id="email" 
-        name="email" 
-        placeholder="Ej: correo@example.com" 
-        value="<%= formData && formData.email || '' %>" 
-        required />
-      <span class="error-msg" id="error-email">Por favor, llena este campo</span>
+    <div class="lava-container">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+        <div class="blob b4"></div>
     </div>
 
-    <div class="form-group">
-      <label for="password">Contraseña</label>
-      <input 
-        type="password" 
-        id="password" 
-        name="password" 
-        placeholder="Ej: User12m!" 
-        required />
-      <span class="error-msg" id="error-password">Por favor, llena este campo</span>
+    <div class="login-card">
+        <div class="header">
+            <i class="fa-solid fa-layer-group logo-icon"></i>
+            <h1 class="title">Bienvenido</h1>
+            <p class="subtitle">Inicia sesión para continuar</p>
+        </div>
+
+        <% if (locals.errors && errors.length > 0) { %>
+            <div class="alert-error">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div><% errors.forEach(err => { %> <div><%= err.msg %></div> <% }) %></div>
+            </div>
+        <% } %>
+
+        <form action="/login" method="POST">
+            <div class="input-group">
+                <input type="email" class="modern-input" name="email" placeholder="Correo electrónico" required value="<%= locals.formData ? formData.email : '' %>">
+                <i class="fa-solid fa-envelope input-icon"></i>
+            </div>
+
+            <div class="input-group">
+                <input type="password" class="modern-input" name="password" placeholder="Contraseña" required>
+                <i class="fa-solid fa-lock input-icon"></i>
+            </div>
+
+            <button type="submit" class="btn-submit">Ingresar</button>
+        </form>
+
+        <div class="footer-links">
+            <span>¿No tienes cuenta?</span> <a href="/register">Crear una ahora</a>
+        </div>
     </div>
 
-    <button type="submit">Iniciar Sesión</button>
-    <a href="/register">Crear Cuenta</a>
-  </form>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("error-email").style.display = "none";
-      document.getElementById("error-password").style.display = "none";
-    });
-
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-      let email = document.getElementById("email");
-      let password = document.getElementById("password");
-      let errorEmail = document.getElementById("error-email");
-      let errorPassword = document.getElementById("error-password");
-
-      let valid = true;
-
-      errorEmail.style.display = "none";
-      errorPassword.style.display = "none";
-      email.classList.remove("input-error");
-      password.classList.remove("input-error");
-
-      if (email.value.trim() === "") {
-        errorEmail.style.display = "block";
-        email.classList.add("input-error");
-        valid = false;
-      }
-
-      if (password.value.trim() === "") {
-        errorPassword.style.display = "block";
-        password.classList.add("input-error");
-        valid = false;
-      }
-
-      if (!valid) {
-        event.preventDefault();
-      }
-    });
-  </script>
 </body>
 </html>
