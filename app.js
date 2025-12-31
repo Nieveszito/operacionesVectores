@@ -15,6 +15,9 @@ const { evaluate } = require('mathjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const VectorOperation = require('./models/VectorOperation');
+
+
 // --- Configuración ---
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -67,7 +70,7 @@ app.get('/dashboard', requireAuth, (req, res) => {
 
 // Gradiente
 app.get('/gradient', requireAuth, (req, res) => res.render('gradient'));
-app.post('/gradient', requireAuth, (req, res) => {
+app.post('/gradient', requireAuth, async (req, res) => {
   const { funcion, x0, y0, z0 } = req.body;
   const x = parseFloat(x0), y = parseFloat(y0), z = parseFloat(z0), h = 0.00001;
 
@@ -77,6 +80,16 @@ app.post('/gradient', requireAuth, (req, res) => {
     const fz = (evaluate(funcion, { x, y, z: z + h }) - evaluate(funcion, { x, y, z: z - h })) / (2 * h);
 
     const resVec = `${fx.toFixed(2)}\\hat{i} + ${fy.toFixed(2)}\\hat{j} + ${fz.toFixed(2)}\\hat{k}`;
+
+
+   await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Gradiente',
+  vector_a: `f(x,y,z) = ${funcion}`,
+  vector_b: `(${x0}, ${y0}, ${z0})`,
+  vector_c: null,
+  result: resVec
+});
 
     res.render('gradient', {
       funcion, x0, y0, z0,
@@ -90,7 +103,7 @@ app.post('/gradient', requireAuth, (req, res) => {
 
 // Divergencia
 app.get('/divergence', requireAuth, (req, res) => res.render('divergence'));
-app.post('/divergence', requireAuth, (req, res) => {
+app.post('/divergence', requireAuth, async (req, res) => {
   const { P, Q, R, x0, y0, z0 } = req.body;
   const x = parseFloat(x0), y = parseFloat(y0), z = parseFloat(z0), h = 0.00001;
 
@@ -98,6 +111,15 @@ app.post('/divergence', requireAuth, (req, res) => {
     const dP_dx = (evaluate(P, { x: x + h, y, z }) - evaluate(P, { x: x - h, y, z })) / (2 * h);
     const dQ_dy = (evaluate(Q, { x, y: y + h, z }) - evaluate(Q, { x, y: y - h, z })) / (2 * h);
     const dR_dz = (evaluate(R, { x, y, z: z + h }) - evaluate(R, { x, y, z: z - h })) / (2 * h);
+
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Divergencia',
+  vector_a: `F = ${Fx}, ${Fy}, ${Fz}`,
+  vector_b: `(${x0}, ${y0}, ${z0})`,
+  vector_c: null,
+  result: resultado
+});
 
     res.render('divergence', {
       P, Q, R, x0, y0, z0,
@@ -110,7 +132,7 @@ app.post('/divergence', requireAuth, (req, res) => {
 
 // Rotacional
 app.get('/rotacional', requireAuth, (req, res) => res.render('rotacional'));
-app.post('/rotacional', requireAuth, (req, res) => {
+app.post('/rotacional', requireAuth, async (req, res) => {
   const { P, Q, R, x0, y0, z0 } = req.body;
   const x = parseFloat(x0), y = parseFloat(y0), z = parseFloat(z0), h = 0.00001;
 
@@ -128,6 +150,16 @@ app.post('/rotacional', requireAuth, (req, res) => {
     const k = dQ_dx - dP_dy;
 
     const resVec = `${i.toFixed(2)}\\hat{i} + ${j.toFixed(2)}\\hat{j} + ${k.toFixed(2)}\\hat{k}`;
+
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Rotacional',
+  vector_a: `F = ${Fx}, ${Fy}, ${Fz}`,
+  vector_b: `(${x0}, ${y0}, ${z0})`,
+  vector_c: null,
+  result: resVec
+});
+
 
     res.render('rotacional', {
       P, Q, R, x0, y0, z0,
@@ -154,7 +186,7 @@ app.get('/visualizer', requireAuth, (req, res) => {
   });
 });
 
-app.post('/visualizer', requireAuth, (req, res) => {
+app.post('/visualizer', requireAuth, async (req, res) => {
   const { type, funcZ, funcP, funcQ, funcR, range } = req.body;
   const rng = parseInt(range) || 5;
   const steps = 15;
@@ -189,6 +221,19 @@ app.post('/visualizer', requireAuth, (req, res) => {
       }
     }
 
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: type === 'scalar' ? 'Campo escalar' : 'Campo vectorial',
+  vector_a: type === 'scalar'
+    ? `z = ${funcZ}`
+    : `P=${funcP}, Q=${funcQ}, R=${funcR}`,
+  vector_b: `Rango = ${range}`,
+  vector_c: null,
+  result: 'Visualización generada'
+});
+
+
+
     res.render('visualizer', {
       type, funcZ, funcP, funcQ, funcR, range,
       xData, yData, zData, uData, vData, wData
@@ -212,7 +257,7 @@ app.get('/double-integral', requireAuth, (req, res) => {
   });
 });
 
-app.post('/double-integral', requireAuth, (req, res) => {
+app.post('/double-integral', requireAuth, async (req, res) => {
   const { func, xmin, xmax, ymin, ymax } = req.body;
   const x1 = parseFloat(xmin), x2 = parseFloat(xmax);
   const y1 = parseFloat(ymin), y2 = parseFloat(ymax);
@@ -239,6 +284,17 @@ app.post('/double-integral', requireAuth, (req, res) => {
       zData.push(row);
     }
 
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Integral doble',
+  vector_a: `f(x,y) = ${func}`,
+  vector_b: `x:[${xmin},${xmax}] y:[${ymin},${ymax}]`,
+  vector_c: null,
+  result: volume.toFixed(4)
+});
+
+
+
     res.render('integrals', {
       func, xmin, xmax, ymin, ymax,
       result: volume.toFixed(4),
@@ -260,7 +316,7 @@ app.get('/line-integral', requireAuth, (req, res) => {
   });
 });
 
-app.post('/line-integral', requireAuth, (req, res) => {
+app.post('/line-integral', requireAuth, async (req, res) => {
   const { P, Q, R, xt, yt, zt, t_start, t_end } = req.body;
 
   let t1, t2;
@@ -300,6 +356,17 @@ app.post('/line-integral', requireAuth, (req, res) => {
       }
     }
 
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Integral de línea',
+  vector_a: `F=(${P},${Q},${R})`,
+  vector_b: `r(t)=(${xt},${yt},${zt})`,
+  vector_c: `[${t_start}, ${t_end}]`,
+  result: work.toFixed(4)
+});
+
+
+
     res.render('line_integral', {
       P,Q,R,xt,yt,zt,t_start,t_end,
       result: work.toFixed(4),
@@ -321,7 +388,7 @@ app.get('/triple-integral', requireAuth, (req, res) => {
   });
 });
 
-app.post('/triple-integral', requireAuth, (req, res) => {
+app.post('/triple-integral', requireAuth, async (req, res) => {
   const { func, xmin, xmax, ymin, ymax, zmin, zmax } = req.body;
 
   const x1 = parseFloat(xmin), x2 = parseFloat(xmax);
@@ -347,6 +414,17 @@ app.post('/triple-integral', requireAuth, (req, res) => {
       }
     }
 
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Integral triple',
+  vector_a: `f(x,y,z) = ${func}`,
+  vector_b: `x:[${xmin},${xmax}] y:[${ymin},${ymax}] z:[${zmin},${zmax}]`,
+  vector_c: null,
+  result: total.toFixed(4)
+});
+
+
+
     res.render('triple_integral', {
       func, xmin, xmax, ymin, ymax, zmin, zmax,
       result: total.toFixed(4)
@@ -364,12 +442,23 @@ const fmtVec = v => `${v[0].toFixed(2)}\\hat{i} ${v[1]>=0?'+':''}${v[1].toFixed(
 
 // Suma / resta
 app.get('/vector-sum', requireAuth, (req, res) => res.render('vector_sum'));
-app.post('/vector-sum', requireAuth, (req, res) => {
+app.post('/vector-sum', requireAuth, async (req, res) => {
   const { vecA, vecB, operacion } = req.body;
   const A = parseVec(vecA), B = parseVec(vecB);
   const R = operacion === 'resta'
     ? A.map((v,i)=>v-B[i])
     : A.map((v,i)=>v+B[i]);
+
+
+    await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: operacion === 'resta' ? 'Resta de vectores' : 'Suma de vectores',
+  vector_a: `A=(${A.join(',')})`,
+  vector_b: `B=(${B.join(',')})`,
+  vector_c: null,
+  result: `R=(${R.join(',')})`
+});
+
 
   res.render('vector_sum', {
     vecA, vecB, operacion,
@@ -382,7 +471,7 @@ app.post('/vector-sum', requireAuth, (req, res) => {
 
 // Punto
 app.get('/vector-dot', requireAuth, (req, res) => res.render('vector_dot'));
-app.post('/vector-dot', requireAuth, (req, res) => {
+app.post('/vector-dot', requireAuth, async (req, res) => {
   const { vecA, vecB } = req.body;
   const A = parseVec(vecA), B = parseVec(vecB);
 
@@ -393,6 +482,17 @@ app.post('/vector-dot', requireAuth, (req, res) => {
     ? (Math.acos(dot/(magA*magB))*180/Math.PI).toFixed(2)
     : 0;
 
+
+  await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Producto punto',
+  vector_a: `A=(${A.join(',')})`,
+  vector_b: `B=(${B.join(',')})`,
+  vector_c: null,
+  result: dot.toFixed(4)
+});
+
+
   res.render('vector_dot', {
     vecA, vecB,
     resultado: dot.toFixed(4),
@@ -402,7 +502,7 @@ app.post('/vector-dot', requireAuth, (req, res) => {
 
 // Cruz
 app.get('/vector-cross', requireAuth, (req, res) => res.render('vector_cross'));
-app.post('/vector-cross', requireAuth, (req, res) => {
+app.post('/vector-cross', requireAuth, async (req, res) => {
   const { vecA, vecB } = req.body;
   const A = parseVec(vecA), B = parseVec(vecB);
 
@@ -411,6 +511,17 @@ app.post('/vector-cross', requireAuth, (req, res) => {
     A[2]*B[0] - A[0]*B[2],
     A[0]*B[1] - A[1]*B[0]
   ];
+
+
+  await VectorOperation.create({
+  user_id: req.session.user.id,
+  operation_type: 'Producto cruz',
+  vector_a: `A=(${A.join(',')})`,
+  vector_b: `B=(${B.join(',')})`,
+  vector_c: null,
+  result: `R=(${R.join(',')})`
+});
+
 
   res.render('vector_cross', {
     vecA, vecB,
