@@ -62,47 +62,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 // ==========================================
-//    HISTORIAL (MODO DISEÑO)
-// ==========================================
-app.get('/history', requireAuth, (req, res) => {
-  const datosFalsos = [
-    {
-      id: 1,
-      operation_type: 'gradiente', 
-      vector_a: 'x^2 + y^2',
-      vector_b: '(1, 2, 0)',
-      vector_c: '',
-      result: '2.00i + 4.00j + 0.00k',
-      created_at: new Date()
-    },
-    {
-      id: 2,
-      operation_type: 'triple_integral',
-      vector_a: 'x*y*z',
-      vector_b: 'Caja[0,1]',
-      vector_c: '',
-      result: '0.1250',
-      created_at: new Date(Date.now() - 3600000)
-    },
-    {
-      id: 3,
-      operation_type: 'suma', 
-      vector_a: '5, 5, 5',
-      vector_b: '1, 2, 3',
-      vector_c: '',
-      result: '6.00i + 7.00j + 8.00k',
-      created_at: new Date(Date.now() - 86400000)
-    }
-  ];
-
-  res.render('history', {
-    user: req.session.user,
-    operations: datosFalsos,
-    message: null
-  });
-});
-
-// ==========================================
 //    1. CÁLCULO DIFERENCIAL (NABLA)
 // ==========================================
 
