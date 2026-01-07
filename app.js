@@ -112,14 +112,17 @@ app.post('/divergence', requireAuth, async (req, res) => {
     const dQ_dy = (evaluate(Q, { x, y: y + h, z }) - evaluate(Q, { x, y: y - h, z })) / (2 * h);
     const dR_dz = (evaluate(R, { x, y, z: z + h }) - evaluate(R, { x, y, z: z - h })) / (2 * h);
 
-    await VectorOperation.create({
+   const resultado = (dP_dx + dQ_dy + dR_dz).toFixed(4);
+
+await VectorOperation.create({
   user_id: req.session.user.id,
   operation_type: 'Divergencia',
-  vector_a: `F = ${Fx}, ${Fy}, ${Fz}`,
+  vector_a: `F = (${P}, ${Q}, ${R})`,
   vector_b: `(${x0}, ${y0}, ${z0})`,
   vector_c: null,
   result: resultado
 });
+
 
     res.render('divergence', {
       P, Q, R, x0, y0, z0,
@@ -151,10 +154,10 @@ app.post('/rotacional', requireAuth, async (req, res) => {
 
     const resVec = `${i.toFixed(2)}\\hat{i} + ${j.toFixed(2)}\\hat{j} + ${k.toFixed(2)}\\hat{k}`;
 
-    await VectorOperation.create({
+   await VectorOperation.create({
   user_id: req.session.user.id,
   operation_type: 'Rotacional',
-  vector_a: `F = ${Fx}, ${Fy}, ${Fz}`,
+  vector_a: `F = (${P}, ${Q}, ${R})`,
   vector_b: `(${x0}, ${y0}, ${z0})`,
   vector_c: null,
   result: resVec
@@ -284,14 +287,18 @@ app.post('/double-integral', requireAuth, async (req, res) => {
       zData.push(row);
     }
 
-    await VectorOperation.create({
+    const resultado = isNaN(volume) ? 'Error' : volume.toFixed(4);
+
+
+   await VectorOperation.create({
   user_id: req.session.user.id,
   operation_type: 'Integral doble',
   vector_a: `f(x,y) = ${func}`,
   vector_b: `x:[${xmin},${xmax}] y:[${ymin},${ymax}]`,
   vector_c: null,
-  result: volume.toFixed(4)
+  result: resultado
 });
+
 
 
 
