@@ -272,6 +272,11 @@ app.post('/double-integral', requireAuth, async (req, res) => {
   let volume = 0;
   let xData=[], yData=[], zData=[];
 
+  for (let i = 0; i <= steps; i++) {
+  xData.push(x1 + i * dx);
+}
+
+
   try {
     for (let j = 0; j <= steps; j++) {
       const y = y1 + j * dy;
