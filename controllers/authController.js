@@ -82,7 +82,7 @@ exports.postRegister = async (req, res) => {
     res.redirect('/login');
   } catch (err) {
     console.error(err);
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY' || err.code === 'SQLITE_CONSTRAINT') {
       return res.render('register', {
         title: 'Registrarse',
         errors: [{ msg: 'El usuario o email ya existe' }],

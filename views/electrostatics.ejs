@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Electrostático</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };</script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link rel="stylesheet" href="/css/vectorsys-theme.css">
+    
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        }
+        #simCanvas {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1; cursor: crosshair;
+            background: radial-gradient(circle at center, #141418 0%, #0a0a0c 100%);
+        }
+        .navbar-overlay {
+            position: absolute; top: 0; width: 100%; z-index: 100;
+            background: transparent; border-bottom: none; backdrop-filter: none;
+        }
+        .hud-bottom {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 95%; max-width: 1400px; z-index: 100; display: grid;
+            grid-template-columns: 350px 1fr 350px; gap: 20px; pointer-events: none;
+        }
+        .hud-panel {
+            background: rgba(15, 15, 20, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-top: 1px solid rgba(255, 255, 255, 0.25); border-left: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px; padding: 20px; box-shadow: 0 12px 40px 0 rgba(0,0,0,0.4);
+            pointer-events: auto; max-height: 250px; overflow-y: auto;
+        }
+        .hud-panel h3 { margin-top: 0; font-size: 0.8rem; }
+        .input-row-mini { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-row-mini .input-group { margin-bottom: 0; }
+        .hud-panel .modern-input { padding: 8px 10px; font-size: 0.85rem; }
+        .hud-panel .btn { padding: 8px 15px; font-size: 0.85rem; }
+        .hud-list { max-height: 100px; }
+        
+        .zoom-controls {
+            position: absolute; top: 80px; right: 20px; z-index: 100;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: auto;
+        }
+        .zoom-btn {
+            background: rgba(15, 15, 20, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-top: 1px solid rgba(255, 255, 255, 0.25); border-left: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+            border-radius: 10px; width: 45px; height: 45px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; transition: all 0.2s;
+        }
+        .zoom-btn:hover { background: var(--border-hover); color: var(--accent-cyan); }
+        
+        /* Select combo styles */
+        .combo-input { border-radius: 10px 0 0 10px !important; border-right: 1px solid var(--border-hover) !important; }
+        .combo-select { border-radius: 0 10px 10px 0 !important; border-left: none !important; width: auto !important; padding: 0 5px !important; background: var(--bg-surface); color: var(--accent-cyan); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar-clean navbar-overlay">
+        <a href="/dashboard" class="nav-brand"><i class="fa-solid fa-bolt" style="color: var(--text-primary);"></i> VectorSys</a>
+        <div class="nav-links" style="background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border-subtle);">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/electrostatics" class="active">Simulador</a>
+            <a href="/history">Historial</a>
+            <a href="/logout">Salir</a>
+        </div>
+    </nav>
+
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()" title="Acercar (Zoom In)"><i class="fa-solid fa-plus"></i></button>
+        <button class="zoom-btn" onclick="zoomOut()" title="Alejar (Zoom Out)"><i class="fa-solid fa-minus"></i></button>
+        <button class="zoom-btn" onclick="resetView()" title="Centrar Vista"><i class="fa-solid fa-crosshairs"></i></button>
+    </div>
+
+    <canvas id="simCanvas"></canvas>
+
+    <div class="hud-bottom">
+        <div class="hud-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin:0;">Agregar Partículas</h3>
+                <div class="type-switcher" style="margin:0; padding: 2px;">
+                    <div class="switch-btn active" id="btn1D" onclick="setMode('1D')" style="padding: 4px 8px; font-size: 0.75rem;">1D</div>
+                    <div class="switch-btn" id="btn2D" onclick="setMode('2D')" style="padding: 4px 8px; font-size: 0.75rem;">2D</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem;">
+                <span style="color: var(--text-secondary);">Cuadrícula / Espacio:</span>
+                <select id="globalDistUnit" class="modern-input" style="padding:2px 5px; width:auto; border:none; background:transparent; color:var(--accent-emerald); cursor:pointer;" onchange="updateScaleAndRecalculate()">
+                    <option value="1">Metros (m)</option>
+                    <option value="0.01" selected>Centímetros (cm)</option>
+                    <option value="0.001">Milímetros (mm)</option>
+                </select>
+            </div>
+
+            <div class="input-row-mini" style="align-items: flex-end;">
+                <div class="input-group" style="flex: 2;">
+                    <label class="label-text">Carga (Q)</label>
+                    <div style="display: flex;">
+                        <input type="number" id="qVal" class="modern-input combo-input" value="1" step="0.1">
+                        <select id="qUnit" class="modern-input combo-select">
+                            <option value="1">C</option>
+                            <option value="1e-3">mC</option>
+                            <option value="1e-6" selected>μC</option>
+                            <option value="1e-9">nC</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label class="label-text">X</label>
+                    <input type="number" id="xVal" class="modern-input" value="0">
+                </div>
+                <div class="input-group" id="yInputGroup" style="flex: 1; display: none;">
+                    <label class="label-text">Y</label>
+                    <input type="number" id="yVal" class="modern-input" value="0">
+                </div>
+                <button class="btn btn-secondary" onclick="addCharge()" style="width: auto;"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <div class="input-row-mini" style="margin-top: 15px; border-top: 1px solid var(--border-subtle); padding-top: 15px; align-items: flex-end;">
+                <div class="input-group" style="flex: 1;">
+                    <label class="label-text">Punto X</label>
+                    <input type="number" id="pxVal" class="modern-input" value="5">
+                </div>
+                <div class="input-group" id="pyInputGroup" style="flex: 1; display: none;">
+                    <label class="label-text">Punto Y</label>
+                    <input type="number" id="pyVal" class="modern-input" value="5">
+                </div>
+                <button class="btn btn-secondary" onclick="addPoint()" style="width: auto;"><i class="fa-solid fa-location-dot"></i></button>
+            </div>
+        </div>
+
+        <div class="hud-panel" style="display: flex; flex-direction: column;">
+            <h3>Resultados Dinámicos (Fuerza Neta y Campo)</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1;">
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px;">Fuerza Sobre Carga Seleccionada</div>
+                    <div id="forceResults" style="color: var(--text-secondary); font-size: 0.85rem;">Haz clic o arrastra una carga para analizar su fuerza en tiempo real.</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px;">Campo Eléctrico Total</div>
+                    <div id="fieldResults" style="color: var(--text-secondary); font-size: 0.85rem; max-height: 120px; overflow-y: auto;">Agrega puntos en el espacio.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hud-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Inventario del Espacio</h3>
+                <form action="/electrostatics/save" method="POST" id="saveForm" style="margin:0;">
+                    <input type="hidden" name="operationData" id="operationData">
+                    <button type="button" class="btn btn-primary" onclick="saveToHistory()" style="padding: 4px 10px; font-size: 0.75rem;"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                </form>
+            </div>
+            
+            <div class="list-container hud-list" id="chargeList" style="margin-top: 10px;"></div>
+            <div class="list-container hud-list" id="pointList" style="margin-top: 5px; max-height: 60px;"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        
+        let mode = '1D';
+        let charges = []; // q en Coulombs, x/y en Unidades Lógicas (ej. cm)
+        let points = [];  // x/y en Unidades Lógicas
+        let selectedChargeIndex = -1;
+        
+        const k = 8.99e9; // Constante Eléctrica (N m^2 / C^2)
+        let scale = 20; // pixeles por unidad lógica
+
+        let animationTime = 0;
+        
+        // Navegación Espacial
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDraggingSpace = false;
+        let isDraggingCharge = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            width = canvas.width;
+            height = canvas.height;
+        }
+        window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+
+        function setMode(newMode) {
+            mode = newMode;
+            document.getElementById('btn1D').classList.toggle('active', mode === '1D');
+            document.getElementById('btn2D').classList.toggle('active', mode === '2D');
+            document.getElementById('yInputGroup').style.display = mode === '2D' ? 'block' : 'none';
+            document.getElementById('pyInputGroup').style.display = mode === '2D' ? 'block' : 'none';
+            draw(); calculate();
+        }
+
+        // --- Controles de Zoom ---
+        function zoomIn() { scale *= 1.2; draw(); }
+        function zoomOut() { scale /= 1.2; draw(); }
+        function resetView() { offsetX = 0; offsetY = 0; scale = 20; draw(); }
+
+        // --- Conversiones de Espacio ---
+        function getDistMultiplier() {
+            return parseFloat(document.getElementById('globalDistUnit').value);
+        }
+        
+        function getDistUnitLabel() {
+            const sel = document.getElementById('globalDistUnit');
+            return sel.options[sel.selectedIndex].text.match(/\(([^)]+)\)/)[1]; // extrae 'm', 'cm' o 'mm'
+        }
+
+        function updateScaleAndRecalculate() {
+            updateChargeList();
+            updatePointList();
+            calculate();
+        }
+
+        function toCanvas(x, y) {
+            return {
+                cx: width / 2 + x * scale + offsetX,
+                cy: height / 2 - y * scale - 50 + offsetY
+            };
+        }
+
+        function fromCanvas(cx, cy) {
+            return {
+                x: (cx - offsetX - width / 2) / scale,
+                y: -(cy - offsetY - height / 2 + 50) / scale
+            };
+        }
+
+        // --- Lógica de Elementos ---
+        function addCharge() {
+            const qInput = parseFloat(document.getElementById('qVal').value);
+            const qUnitMultiplier = parseFloat(document.getElementById('qUnit').value);
+            const x = parseFloat(document.getElementById('xVal').value);
+            const y = mode === '2D' ? parseFloat(document.getElementById('yVal').value) : 0;
+            
+            if (isNaN(qInput) || isNaN(x)) return;
+            
+            const qInCoulombs = qInput * qUnitMultiplier;
+            const qUnitLabel = document.getElementById('qUnit').options[document.getElementById('qUnit').selectedIndex].text;
+
+            charges.push({ id: Date.now(), q: qInCoulombs, x, y, origQ: qInput, origUnit: qUnitLabel });
+            selectedChargeIndex = charges.length - 1;
+            updateChargeList();
+            draw(); calculate();
+        }
+
+        function removeCharge(index) {
+            if (selectedChargeIndex === index) selectedChargeIndex = -1;
+            else if (selectedChargeIndex > index) selectedChargeIndex--;
+            charges.splice(index, 1);
+            updateChargeList(); draw(); calculate();
+        }
+
+        function addPoint() {
+            const x = parseFloat(document.getElementById('pxVal').value);
+            const y = mode === '2D' ? parseFloat(document.getElementById('pyVal').value) : 0;
+            if (isNaN(x)) return;
+            points.push({ id: Date.now(), x, y });
+            updatePointList(); draw(); calculate();
+        }
+        
+        function removePoint(index) {
+            points.splice(index, 1);
+            updatePointList(); draw(); calculate();
+        }
+
+        function updateChargeList() {
+            const list = document.getElementById('chargeList');
+            const distUnit = getDistUnitLabel();
+            list.innerHTML = '';
+            charges.forEach((c, i) => {
+                const colorClass = c.q > 0 ? 'badge-pos' : (c.q < 0 ? 'badge-neg' : '');
+                const selIndicator = i === selectedChargeIndex ? '<i class="fa-solid fa-bolt" style="font-size:0.7rem; margin-right:5px; color:var(--accent-cyan)"></i>' : '';
+                
+                list.innerHTML += `
+                    <div class="list-item" style="padding: 6px 10px;">
+                        <span style="font-size: 0.8rem;">${selIndicator}<span class="${colorClass}">${c.q > 0 ? '+' : ''}${c.origQ}${c.origUnit}</span> en (${c.x.toFixed(1)}${mode==='2D' ? ','+c.y.toFixed(1) : ''}) ${distUnit}</span>
+                        <button class="btn-text-danger" onclick="removeCharge(${i})" style="padding: 2px;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function updatePointList() {
+            const list = document.getElementById('pointList');
+            const distUnit = getDistUnitLabel();
+            list.innerHTML = '';
+            points.forEach((p, i) => {
+                list.innerHTML += `
+                    <div class="list-item" style="padding: 6px 10px;">
+                        <span style="font-size: 0.8rem; color:var(--accent-emerald)"><i class="fa-solid fa-location-dot"></i> Pt en (${p.x.toFixed(1)}${mode==='2D' ? ','+p.y.toFixed(1) : ''}) ${distUnit}</span>
+                        <button class="btn-text-danger" onclick="removePoint(${i})" style="padding: 2px;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- INTERACTIVIDAD (DRAG & DROP Y PAN) ---
+        canvas.addEventListener('mousedown', (e) => {
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            let clickedOnCharge = false;
+
+            charges.forEach((c, i) => {
+                const pos = toCanvas(c.x, c.y);
+                const dx = clickX - pos.cx;
+                const dy = clickY - pos.cy;
+                if (dx * dx + dy * dy <= 225) { // Radio visual de ~15px
+                    selectedChargeIndex = i;
+                    clickedOnCharge = true;
+                }
+            });
+
+            if (clickedOnCharge) {
+                isDraggingCharge = true;
+                canvas.style.cursor = 'move';
+                updateChargeList(); draw(); calculate();
+            } else {
+                selectedChargeIndex = -1;
+                updateChargeList(); draw(); calculate();
+                
+                // Iniciar Panning del espacio
+                isDraggingSpace = true;
+                dragStartX = e.clientX - offsetX;
+                dragStartY = e.clientY - offsetY;
+                canvas.style.cursor = 'grabbing';
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingCharge && selectedChargeIndex >= 0) {
+                const logical = fromCanvas(e.clientX, e.clientY);
+                charges[selectedChargeIndex].x = parseFloat(logical.x.toFixed(2));
+                if (mode === '2D') {
+                    charges[selectedChargeIndex].y = parseFloat(logical.y.toFixed(2));
+                }
+                updateChargeList();
+                draw();
+                calculate();
+            } else if (isDraggingSpace) {
+                offsetX = e.clientX - dragStartX;
+                offsetY = e.clientY - dragStartY;
+                draw();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDraggingCharge || isDraggingSpace) {
+                isDraggingCharge = false;
+                isDraggingSpace = false;
+                canvas.style.cursor = 'crosshair';
+            }
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSensitivity = 0.001;
+            const zoomFactor = Math.exp(-e.deltaY * zoomSensitivity);
+            scale *= zoomFactor;
+            
+            const mouseX = e.clientX; const mouseY = e.clientY;
+            offsetX = mouseX - (mouseX - offsetX) * zoomFactor;
+            offsetY = mouseY - (mouseY - offsetY) * zoomFactor;
+            
+            draw();
+        }, { passive: false });
+
+        // --- MOTOR FÍSICO ---
+        function calculate() {
+            let resForceHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem;">Selecciona o arrastra una carga.</span>';
+            let resFieldHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem;">Agrega puntos en el espacio.</span>';
+            let currentResultString = '';
+            
+            const distMulti = getDistMultiplier(); // Factor a metros
+
+            if (selectedChargeIndex >= 0 && selectedChargeIndex < charges.length) {
+                const target = charges[selectedChargeIndex];
+                let Fx = 0, Fy = 0;
+
+                charges.forEach((c, i) => {
+                    if (i === selectedChargeIndex) return;
+                    
+                    const dx = (target.x - c.x) * distMulti;
+                    const dy = (target.y - c.y) * distMulti;
+                    const r2 = dx*dx + dy*dy;
+                    if (r2 === 0) return;
+                    
+                    const r = Math.sqrt(r2);
+                    // Fuerza en Newtons (q ya está en Coulombs SI)
+                    const magF = k * Math.abs(target.q * c.q) / r2; 
+                    
+                    const repel = (target.q * c.q) > 0;
+                    const dirX = dx / r; const dirY = dy / r;
+                    
+                    if (repel) { Fx += magF * dirX; Fy += magF * dirY; } 
+                    else { Fx -= magF * dirX; Fy -= magF * dirY; }
+                });
+
+                const magTotal = Math.sqrt(Fx*Fx + Fy*Fy);
+                resForceHTML = `
+                    <div class="res-row"><span>Fx:</span> <span class="res-value">${Fx.toExponential(2)} N</span></div>
+                    ${mode === '2D' ? `<div class="res-row"><span>Fy:</span> <span class="res-value">${Fy.toExponential(2)} N</span></div>` : ''}
+                    <div class="res-row" style="margin-top:5px; border-top:1px solid var(--border-subtle); padding-top:5px;">
+                        <span>|F Neta|:</span> <span class="res-value" style="color:var(--accent-emerald)">${magTotal.toExponential(2)} N</span>
+                    </div>
+                `;
+                currentResultString += `F_neta = ${magTotal.toExponential(2)} N. `;
+            }
+
+            if (points.length > 0) {
+                resFieldHTML = '';
+                points.forEach((p, idx) => {
+                    let Ex = 0, Ey = 0;
+                    charges.forEach(c => {
+                        const dx = (p.x - c.x) * distMulti;
+                        const dy = (p.y - c.y) * distMulti;
+                        const r2 = dx*dx + dy*dy;
+                        if (r2 === 0) return;
+                        const r = Math.sqrt(r2);
+                        const magE = k * Math.abs(c.q) / r2;
+                        const dirX = dx / r; const dirY = dy / r;
+                        
+                        if (c.q > 0) { Ex += magE * dirX; Ey += magE * dirY; }
+                        else { Ex -= magE * dirX; Ey -= magE * dirY; }
+                    });
+                    const magTotalE = Math.sqrt(Ex*Ex + Ey*Ey);
+                    resFieldHTML += `
+                        <div style="margin-bottom: 5px; font-size: 0.8rem;">
+                            <span style="color: var(--text-primary);">P${idx + 1}:</span> <span class="res-value">${magTotalE.toExponential(2)} N/C</span>
+                        </div>
+                    `;
+                    currentResultString += `E_P${idx+1} = ${magTotalE.toExponential(2)} N/C. `;
+                });
+            }
+
+            document.getElementById('forceResults').innerHTML = resForceHTML;
+            document.getElementById('fieldResults').innerHTML = resFieldHTML;
+
+            const operationData = {
+                type: 'Simulador Electrostático ' + mode,
+                a: `Cargas: ${charges.length}`,
+                b: points.length > 0 ? `Puntos: ${points.length}` : 'Sin puntos',
+                res: currentResultString || 'Vacía'
+            };
+            document.getElementById('operationData').value = JSON.stringify(operationData);
+        }
+
+        // --- RENDERIZADO VISUAL ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Cuadrícula dinámica
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            const centerX = width/2 + offsetX;
+            const centerY = height/2 - 50 + offsetY;
+            
+            let gridStep = scale * 2;
+            if (gridStep < 10) gridStep *= 10;
+            if (gridStep > 100) gridStep /= 2;
+
+            for(let i = 0; i < width; i += gridStep) {
+                const offsetLine = i - (centerX % gridStep);
+                ctx.moveTo(offsetLine, 0); ctx.lineTo(offsetLine, height);
+            }
+            for(let i = 0; i < height; i += gridStep) {
+                const offsetLine = i - (centerY % gridStep);
+                ctx.moveTo(0, offsetLine); ctx.lineTo(width, offsetLine);
+            }
+            ctx.stroke();
+
+            // Ejes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY); ctx.lineTo(width, centerY); // X
+            if (mode === '2D') {
+                ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height); // Y
+            }
+            ctx.stroke();
+
+            // Puntos
+            points.forEach(p => {
+                const pos = toCanvas(p.x, p.y);
+                const pulse = Math.sin(animationTime * 5) * 2;
+                ctx.beginPath();
+                ctx.arc(pos.cx, pos.cy, 4 + pulse, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.5)'; ctx.fill();
+                ctx.beginPath();
+                ctx.arc(pos.cx, pos.cy, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981'; ctx.fill();
+            });
+
+            // Cargas Orgánicas
+            charges.forEach((c, i) => {
+                const pos = toCanvas(c.x, c.y);
+                const isPos = c.q > 0;
+                const baseColor = isPos ? '244, 63, 94' : '6, 182, 212';
+                
+                if (i === selectedChargeIndex) {
+                    ctx.beginPath();
+                    ctx.arc(pos.cx, pos.cy, 28 + Math.sin(animationTime * 4) * 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${baseColor}, 0.15)`; ctx.fill();
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+                }
+
+                const haloPulse = Math.sin(animationTime * 2 + i) * 5;
+                const rad = 20 + haloPulse;
+                const grad = ctx.createRadialGradient(pos.cx, pos.cy, 3, pos.cx, pos.cy, rad);
+                grad.addColorStop(0, '#fff');
+                grad.addColorStop(0.3, `rgb(${baseColor})`);
+                grad.addColorStop(1, `rgba(${baseColor}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(pos.cx, pos.cy, rad, 0, Math.PI * 2);
+                ctx.fillStyle = grad; ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(pos.cx, pos.cy, 7, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${baseColor})`; ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '600 12px Inter';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 5;
+                ctx.fillText((isPos ? '+' : '') + c.origQ, pos.cx, pos.cy - 24);
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        function animate() {
+            animationTime += 0.05;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        setTimeout(() => { resizeCanvas(); animate(); }, 100);
+    </script>
+</body>
+</html>

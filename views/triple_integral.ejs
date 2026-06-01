@@ -9,45 +9,26 @@
     <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };</script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <style>
-        :root { --bg-dark: #050505; --glass-panel: rgba(20, 20, 24, 0.7); --glass-border: rgba(255, 255, 255, 0.08); --accent-primary: #8b5cf6; --text-main: #ffffff; --text-muted: #94a3b8; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
-        .ambient-glow { position: fixed; top: -20%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
-        .navbar-island { position: fixed; top: 20px; z-index: 100; background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 100px; padding: 8px 12px; display: flex; gap: 8px; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .nav-btn { color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; text-decoration: none; }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .nav-btn.active { background: #fff; color: #000; }
-        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
-        .main-container { width: 95%; max-width: 800px; margin-top: 100px; margin-bottom: 50px; animation: fadeUp 0.8s ease; }
-        .panel { background: var(--glass-panel); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-        .input-group { margin-bottom: 15px; }
-        .label-text { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
-        .section-label { color: var(--accent-primary); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-        .modern-input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; }
-        .btn-primary { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 20px; }
-        .result-box { text-align: center; margin-top: 30px; padding: 20px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 15px; }
-        .result-val { font-size: 2.5rem; font-weight: 700; color: #fff; }
-        
-        /* EMPTY STATE */
-        .empty-container { text-align: center; color: var(--text-muted); padding: 20px; }
-        .empty-icon { font-size: 5rem; margin-bottom: 20px; color: var(--accent-primary); animation: pulse 3s infinite ease-in-out; text-shadow: 0 0 30px rgba(139, 92, 246, 0.4); }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    
+    <link rel="stylesheet" href="/css/vectorsys-theme.css">
 </head>
 <body>
-    <div class="ambient-glow"></div>
-    <nav class="navbar-island">
-        <a href="/dashboard" class="nav-btn"><i class="fa-solid fa-house"></i></a>
-        <div class="divider"></div>
-        <a href="/dashboard#integrales" class="nav-btn active"><i class="fa-solid fa-cube"></i></a>
-        <a href="/history" class="nav-btn"><i class="fa-solid fa-clock-rotate-left"></i></a>
-        <div class="divider"></div>
-        <a href="/logout" class="nav-btn close"><i class="fa-solid fa-right-from-bracket"></i></a>
+    
+        <nav class="navbar-clean" style="justify-content: space-between; padding: 0 30px;">
+        <a href="/dashboard" class="nav-brand"><i class="fa-solid fa-bolt" style="color: var(--text-primary);"></i> VectorSys</a>
+        
+        <div class="nav-links" style="background: rgba(15, 15, 20, 0.45); backdrop-filter: blur(16px); padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 15px;">
+            <a href="#calculo" title="Cálculo Diferencial"><i class="fa-solid fa-wave-square"></i> Cálculo</a>
+        <a href="#integrales" title="Integrales"><i class="fa-solid fa-chart-area"></i> Integrales</a>
+        </div>
+
+        <div class="nav-links">
+            <a href="/history" title="Historial"><i class="fa-solid fa-clock-rotate-left"></i> Historial</a>
+            <a href="/logout" title="Cerrar Sesión"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+        </div>
     </nav>
 
-    <div class="main-container">
+    <div class="main-container calc-layout">
         <div class="panel" style="justify-content: flex-start;">
             <h2 style="margin:0;">Integral Triple</h2>
             <p style="color:#aaa; font-size:0.8rem; margin-bottom:20px;">Masa/Volumen: $\iiint f(x,y,z) \,dV$</p>
@@ -70,7 +51,7 @@
                     <div class="input-group"><label class="label-text">Z min</label><input type="number" step="any" class="modern-input" name="zmin" value="<%= zmin || 0 %>"></div>
                     <div class="input-group"><label class="label-text">Z max</label><input type="number" step="any" class="modern-input" name="zmax" value="<%= zmax || 1 %>"></div>
                 </div>
-                <button type="submit" class="btn-primary">Calcular</button>
+                <button type="submit" class="btn btn-primary">Calcular</button>
             </form>
         </div>
 

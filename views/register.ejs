@@ -7,182 +7,67 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --bg-dark: #001015;
-            --glass-panel: rgba(10, 25, 30, 0.6);
-            --accent-primary: #06b6d4; /* CYAN */
-            --text-main: #ffffff;
-            --text-muted: #ccfbf1;
-            --error-color: #ff6b6b;
-        }
-
-        * { box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* --- FONDO LAVA (VERDE/AZUL) --- */
-        .lava-container {
-            position: absolute; width: 100%; height: 100%;
-            overflow: hidden; z-index: -1; background: #020617;
-        }
-
-        .blob {
-            position: absolute; border-radius: 50%;
-            filter: blur(50px); opacity: 0.7;
-            animation: float 25s infinite ease-in-out alternate;
-        }
-
-        /* Cyan Brillante */
-        .b1 {
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, #06b6d4, #0e7490);
-            top: -150px; right: -100px;
-            animation-duration: 30s;
-        }
-
-        /* Verde Esmeralda */
-        .b2 {
-            width: 450px; height: 450px;
-            background: radial-gradient(circle, #10b981, #047857);
-            bottom: -50px; left: -100px;
-            animation-duration: 22s; animation-direction: alternate-reverse;
-        }
-
-        /* Azul Real */
-        .b3 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, #3b82f6, #1d4ed8);
-            top: 20%; right: 40%; opacity: 0.5;
-            animation-duration: 28s;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-40px, 60px) scale(1.1) rotate(15deg); border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-            100% { transform: translate(30px, -30px) scale(0.95) rotate(-10deg); }
-        }
-
-        /* --- TARJETA --- */
-        .register-card {
-            width: 100%; max-width: 450px;
-            background: var(--glass-panel);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 40px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
-        .header { text-align: center; margin-bottom: 25px; }
-        .logo-icon { font-size: 3.5rem; background: linear-gradient(135deg, #22d3ee, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.4)); }
-        .title { font-size: 2rem; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; opacity: 0.9; }
-
-        /* INPUTS */
-        .input-group { margin-bottom: 15px; position: relative; }
-        .input-icon { position: absolute; left: 16px; top: 16px; color: var(--text-muted); transition: 0.3s; }
-        
-        .modern-input {
-            width: 100%; padding: 16px 16px 16px 50px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; color: #fff; font-size: 0.95rem;
-            transition: all 0.3s;
-        }
-        .modern-input:focus { 
-            border-color: var(--accent-primary); outline: none; 
-            background: rgba(255, 255, 255, 0.1); 
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
-        }
-        .modern-input:focus + .input-icon { color: var(--accent-primary); }
-        
-        .input-error { border-color: var(--error-color); box-shadow: 0 0 10px rgba(255, 107, 107, 0.2); }
-        .input-error + .input-icon { color: var(--error-color); }
-        .error-hint { color: var(--error-color); font-size: 0.8rem; margin-top: 5px; margin-left: 5px; display: none; }
-
-        /* BOTÓN */
-        .btn-submit {
-            width: 100%; padding: 16px; margin-top: 10px;
-            background: linear-gradient(90deg, #06b6d4, #2563eb);
-            border: none; border-radius: 12px;
-            color: #fff; font-weight: 700; font-size: 1.1rem;
-            cursor: pointer; transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-        }
-        .btn-submit:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6); }
-
-        .footer-links { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
-        .footer-links a { color: #fff; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: 0.3s; }
-        .footer-links a:hover { border-bottom-color: #fff; }
-
-        .alert-error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ffcccc; padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-    </style>
+    
+    <link rel="stylesheet" href="/css/vectorsys-theme.css">
 </head>
 <body>
 
-    <div class="lava-container">
-        <div class="blob b1"></div>
-        <div class="blob b2"></div>
-        <div class="blob b3"></div>
-    </div>
-
-    <div class="register-card">
-        <div class="header">
-            <i class="fa-solid fa-rocket logo-icon"></i>
-            <h1 class="title">Crear Cuenta</h1>
-            <p class="subtitle">Únete a la plataforma vectorial</p>
+    <div class="form-container">
+        <div class="auth-header">
+            <i class="fa-solid fa-rocket"></i>
+            <h2>Crear Cuenta</h2>
+            <p class="auth-subtitle">Únete a la plataforma vectorial</p>
         </div>
 
         <% if (locals.errors && errors.length > 0) { %>
-            <div class="alert-error">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <div><% errors.forEach(err => { %> <div><%= err.msg %></div> <% }) %></div>
+            <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--accent-rose); color: var(--accent-rose); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px;"></i>
+                <% errors.forEach(err => { %> <span style="display:block; margin-top:5px; font-size: 0.9rem;"><%= err.msg %></span> <% }) %>
             </div>
         <% } %>
 
         <form id="registerForm" action="/register" method="POST" novalidate>
             <div class="input-group">
-                <input type="text" class="modern-input" id="username" name="username" placeholder="Nombre de Usuario" required minlength="3" value="<%= locals.formData ? formData.username : '' %>">
-                <i class="fa-regular fa-user input-icon"></i>
-                <div class="error-hint" id="hint-username">Mínimo 3 caracteres</div>
+                <label class="label-text">Nombre de Usuario</label>
+                <div style="position: relative;">
+                    <i class="fa-regular fa-user" style="position: absolute; left: 14px; top: 14px; color: var(--text-secondary);"></i>
+                    <input type="text" class="modern-input" id="username" name="username" placeholder="Tu nombre" required minlength="3" value="<%= locals.formData ? formData.username : '' %>" style="padding-left: 40px;">
+                </div>
+                <div class="error-hint" id="hint-username" style="display:none; color: var(--accent-rose); font-size: 0.8rem; margin-top: 5px;">Mínimo 3 caracteres</div>
             </div>
 
             <div class="input-group">
-                <input type="email" class="modern-input" id="email" name="email" placeholder="Correo Electrónico" required value="<%= locals.formData ? formData.email : '' %>">
-                <i class="fa-regular fa-envelope input-icon"></i>
-                <div class="error-hint" id="hint-email">Correo inválido</div>
+                <label class="label-text">Correo Electrónico</label>
+                <div style="position: relative;">
+                    <i class="fa-regular fa-envelope" style="position: absolute; left: 14px; top: 14px; color: var(--text-secondary);"></i>
+                    <input type="email" class="modern-input" id="email" name="email" placeholder="tucorreo@ejemplo.com" required value="<%= locals.formData ? formData.email : '' %>" style="padding-left: 40px;">
+                </div>
+                <div class="error-hint" id="hint-email" style="display:none; color: var(--accent-rose); font-size: 0.8rem; margin-top: 5px;">Correo inválido</div>
             </div>
 
             <div class="input-group">
-                <input type="password" class="modern-input" id="password" name="password" placeholder="Contraseña (Mín 6)" required minlength="6">
-                <i class="fa-solid fa-lock input-icon"></i>
-                <div class="error-hint" id="hint-password">Mínimo 6 caracteres</div>
+                <label class="label-text">Contraseña</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 14px; color: var(--text-secondary);"></i>
+                    <input type="password" class="modern-input" id="password" name="password" placeholder="••••••••" required minlength="6" style="padding-left: 40px;">
+                </div>
+                <div class="error-hint" id="hint-password" style="display:none; color: var(--accent-rose); font-size: 0.8rem; margin-top: 5px;">Mínimo 6 caracteres</div>
             </div>
 
             <div class="input-group">
-                <input type="password" class="modern-input" id="confirmPassword" name="confirmPassword" placeholder="Confirmar Contraseña" required>
-                <i class="fa-solid fa-check-double input-icon"></i>
-                <div class="error-hint" id="hint-match">No coinciden</div>
+                <label class="label-text">Confirmar Contraseña</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-check-double" style="position: absolute; left: 14px; top: 14px; color: var(--text-secondary);"></i>
+                    <input type="password" class="modern-input" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required style="padding-left: 40px;">
+                </div>
+                <div class="error-hint" id="hint-match" style="display:none; color: var(--accent-rose); font-size: 0.8rem; margin-top: 5px;">No coinciden</div>
             </div>
 
-            <button type="submit" class="btn-submit" id="submitBtn">Registrarse</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="margin-top: 24px;">Registrarse <i class="fa-solid fa-arrow-right"></i></button>
         </form>
 
-        <div class="footer-links">
-            <span>¿Ya tienes cuenta?</span> <a href="/login">Inicia Sesión</a>
+        <div style="margin-top: 24px; font-size: 0.9rem; color: var(--text-secondary);">
+            <span>¿Ya tienes cuenta?</span> <a href="/login" style="color: var(--accent-cyan); text-decoration: none; font-weight: 500;">Inicia Sesión</a>
         </div>
     </div>
 
@@ -203,10 +88,10 @@
                 }
 
                 if (!valid && input.value.length > 0) {
-                    input.classList.add('input-error');
+                    input.style.borderColor = 'var(--accent-rose)';
                     if(hint) hint.style.display = 'block';
                 } else {
-                    input.classList.remove('input-error');
+                    input.style.borderColor = 'var(--border-subtle)';
                     if(hint) hint.style.display = 'none';
                 }
             };

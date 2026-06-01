@@ -545,6 +545,36 @@ app.post('/vector-cross', requireAuth, async (req, res) => {
 });
 
 // ==========================================
+//    3. FÍSICA Y SIMULACIÓN
+// ==========================================
+
+// Simulador Electrostático
+app.get('/electrostatics', requireAuth, (req, res) => {
+  res.render('electrostatics', { user: req.session.user });
+});
+
+app.post('/electrostatics/save', requireAuth, async (req, res) => {
+  try {
+    const { operationData } = req.body;
+    const data = JSON.parse(operationData);
+
+    await VectorOperation.create({
+      user_id: req.session.user.id,
+      operation_type: data.type,
+      vector_a: data.a,
+      vector_b: data.b,
+      vector_c: null,
+      result: data.res
+    });
+
+    res.redirect('/history?message=Simulación guardada en el historial');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/electrostatics?error=Error al guardar');
+  }
+});
+
+// ==========================================
 //    RUTAS LEGACY
 // ==========================================
 app.use('/', authRoutes);

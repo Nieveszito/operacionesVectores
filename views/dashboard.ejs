@@ -11,140 +11,27 @@
     <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };</script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <style>
-        :root {
-            --bg-dark: #050505;
-            --glass-panel: rgba(20, 20, 24, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
-            
-            /* Colores */
-            --color-grad: #a855f7;  /* Morado */
-            --color-div: #3b82f6;   /* Azul */
-            --color-rot: #f59e0b;   /* Naranja */
-            --color-ops: #10b981;   /* Verde */
-            --color-hist: #ec4899;  /* Rosa */
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; } /* SCROLL SUAVE */
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 80px;
-        }
-
-        /* --- LUCES DE FONDO --- */
-        .ambient-glow { position: fixed; top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
-        .ambient-glow-2 { position: fixed; bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%); filter: blur(80px); z-index: -1; pointer-events: none; }
-
-        /* --- NAVBAR ISLAND --- */
-        .navbar-island {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
-            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
-            padding: 8px 12px;
-            display: flex; gap: 8px; align-items: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            transition: 0.3s ease;
-        }
-        .navbar-island:hover { transform: translateX(-50%) translateY(2px); }
-        .nav-btn { color: var(--text-muted); text-decoration: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1rem; }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .nav-btn.active { background: #fff; color: #000; }
-        .nav-btn.close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
-
-        .container { width: 90%; max-width: 1100px; margin: 100px auto 0; animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        /* HERO */
-        .hero-section { text-align: center; margin-bottom: 50px; }
-        .welcome-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .hero-title { font-size: 2.5rem; font-weight: 700; margin: 0; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
-
-        /* --- SEPARADORES --- */
-        .section-header {
-            margin: 60px 0 25px 0;
-            display: flex; align-items: center; gap: 15px;
-            scroll-margin-top: 100px; 
-        }
-        .section-title {
-            font-size: 1.1rem; font-weight: 600; color: #fff;
-            text-transform: uppercase; letter-spacing: 1.2px; margin: 0;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .section-line { flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent); }
-
-        /* GRIDS & CARDS */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-
-        .tool-card {
-            background: var(--glass-panel); backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border); border-radius: 20px;
-            padding: 30px 25px; text-decoration: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: space-between;
-            min-height: 200px;
-        }
-        .tool-card:hover { transform: translateY(-5px); background: rgba(30, 30, 35, 0.8); border-color: rgba(255,255,255,0.2); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
-
-        .card-icon-wrapper { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 15px; transition: 0.3s; }
-        .card-content h3 { font-size: 1.2rem; margin: 0 0 6px 0; color: #fff; font-weight: 600; }
-        .card-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
-        .card-arrow { position: absolute; bottom: 25px; right: 25px; opacity: 0; transform: translateX(-10px); transition: 0.3s; color: #fff; }
-        .tool-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
-
-        /* ESTILOS DE COLORES ESPECÍFICOS */
-        /* Diferencial (Morado/Azul/Naranja) */
-        .card-grad .card-icon-wrapper { background: rgba(168, 85, 247, 0.1); color: var(--color-grad); }
-        .card-grad:hover { border-top: 1px solid var(--color-grad); }
-        .card-div .card-icon-wrapper { background: rgba(59, 130, 246, 0.1); color: var(--color-div); }
-        .card-div:hover { border-top: 1px solid var(--color-div); }
-        .card-rot .card-icon-wrapper { background: rgba(245, 158, 11, 0.1); color: var(--color-rot); }
-        .card-rot:hover { border-top: 1px solid var(--color-rot); }
-
-        /* Integral (Rojo/Naranja/Oro/Violeta) */
-        .card-vis:hover { border-top: 1px solid #ef4444; } /* Rojo */
-        .card-int:hover { border-top: 1px solid #f97316; } /* Naranja */
-        .card-int-line:hover { border-top: 1px solid #eab308; } /* Oro */
-        .card-int-triple:hover { border-top: 1px solid #8b5cf6; } /* Violeta */
-
-        /* Álgebra (Verde/Cyan/Rosa) */
-        .card-ops:hover { border-top: 1px solid #10b981; }
-        .card-ops .card-icon-wrapper { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .card-dot:hover { border-top: 1px solid #06b6d4; }
-        .card-dot .card-icon-wrapper { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
-        .card-cross:hover { border-top: 1px solid #f43f5e; }
-        .card-cross .card-icon-wrapper { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
-
-        /* Utilidades */
-        .card-hist:hover { border-top: 1px solid #ec4899; }
-        .card-hist .card-icon-wrapper { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
-
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    
+    <link rel="stylesheet" href="/css/vectorsys-theme.css">
 </head>
 <body>
 
-    <div class="ambient-glow"></div>
     <div class="ambient-glow-2"></div>
 
-    <nav class="navbar-island">
-        <a href="#" class="nav-btn active" title="Inicio"><i class="fa-solid fa-house"></i></a>
-        <div class="divider"></div>
-        <a href="#calculo" class="nav-btn" title="Cálculo Diferencial"><i class="fa-solid fa-wave-square"></i></a>
-        <a href="#integrales" class="nav-btn" title="Integrales"><i class="fa-solid fa-chart-area"></i></a>
-        <a href="#algebra" class="nav-btn" title="Álgebra"><i class="fa-solid fa-vector-square"></i></a>
-        <a href="#utilidades" class="nav-btn" title="Historial"><i class="fa-solid fa-clock-rotate-left"></i></a>
-        <div class="divider"></div>
-        <a href="/logout" class="nav-btn close" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></a>
+    <nav class="navbar-clean" style="justify-content: space-between; padding: 0 30px;">
+        <a href="/dashboard" class="nav-brand"><i class="fa-solid fa-bolt" style="color: var(--text-primary);"></i> VectorSys</a>
+        
+        <div class="nav-links" style="background: rgba(15, 15, 20, 0.45); backdrop-filter: blur(16px); padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 15px;">
+            <a href="#calculo" title="Cálculo Diferencial"><i class="fa-solid fa-wave-square"></i> Cálculo</a>
+            <a href="#integrales" title="Integrales"><i class="fa-solid fa-chart-area"></i> Integrales</a>
+            <a href="#algebra" title="Álgebra"><i class="fa-solid fa-vector-square"></i> Álgebra</a>
+            <a href="#fisica" title="Física"><i class="fa-solid fa-bolt"></i> Física</a>
+        </div>
+
+        <div class="nav-links">
+            <a href="/history" title="Historial"><i class="fa-solid fa-clock-rotate-left"></i></a>
+            <a href="/logout" title="Cerrar Sesión"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+        </div>
     </nav>
 
     <div class="container">
@@ -221,6 +108,18 @@
             <a href="/vector-cross" class="tool-card card-cross">
                 <div><div class="card-icon-wrapper"><i class="fa-solid fa-xmark"></i></div>
                 <div class="card-content"><h3>Producto Cruz</h3><p>Vector perpendicular $\vec{A} \times \vec{B}$.</p></div></div>
+                <i class="fa-solid fa-arrow-right card-arrow"></i>
+            </a>
+        </div>
+
+        <div id="fisica" class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-bolt" style="color:#eab308;"></i> Física y Simulación</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="dashboard-grid">
+            <a href="/electrostatics" class="tool-card" style="border-top: 1px solid #eab308;">
+                <div><div class="card-icon-wrapper" style="background: rgba(234, 179, 8, 0.1); color: #eab308;"><i class="fa-solid fa-bolt"></i></div>
+                <div class="card-content"><h3>Simulador Electrostático</h3><p>Fuerzas y Campos Eléctricos.</p></div></div>
                 <i class="fa-solid fa-arrow-right card-arrow"></i>
             </a>
         </div>
