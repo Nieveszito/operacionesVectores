@@ -35,7 +35,16 @@
             background: rgba(15, 15, 20, 0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.12); border-top: 1px solid rgba(255, 255, 255, 0.25); border-left: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 16px; padding: 20px; box-shadow: 0 12px 40px 0 rgba(0,0,0,0.4);
-            pointer-events: auto; max-height: 250px; overflow-y: auto;
+            pointer-events: auto; max-height: 100%; overflow-y: auto; height: 100%;
+        }
+        
+        .resize-bar {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 100px; height: 20px; cursor: ns-resize; z-index: 101;
+            display: flex; justify-content: center; align-items: center; pointer-events: auto;
+        }
+        .resize-bar::after {
+            content: ''; width: 40px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 4px;
         }
         .hud-panel h3 { margin-top: 0; font-size: 0.8rem; }
         .input-row-mini { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -45,7 +54,7 @@
         .hud-list { max-height: 100px; }
         
         .zoom-controls {
-            position: absolute; top: 80px; right: 20px; z-index: 100;
+            position: absolute; top: 80px; right: 20px; z-index: 200;
             display: flex; flex-direction: column; gap: 10px; pointer-events: auto;
         }
         .zoom-btn {
@@ -61,6 +70,25 @@
         /* Select combo styles */
         .combo-input { border-radius: 10px 0 0 10px !important; border-right: 1px solid var(--border-hover) !important; }
         .combo-select { border-radius: 0 10px 10px 0 !important; border-left: none !important; width: auto !important; padding: 0 5px !important; background: var(--bg-surface); color: var(--accent-cyan); cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .hud-bottom {
+                grid-template-columns: 1fr;
+                bottom: 0;
+                width: 100%;
+                max-height: 45vh;
+                overflow-y: auto;
+                background: rgba(15, 15, 20, 0.8);
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 20px 20px 0 0;
+                backdrop-filter: blur(20px);
+                gap: 5px;
+                padding: 10px;
+            }
+            .hud-panel { background: transparent; border: none; box-shadow: none; padding: 10px; max-height: none; }
+            .zoom-controls { top: 70px; right: 10px; }
+            .zoom-btn { width: 38px; height: 38px; font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -79,11 +107,13 @@
         <button class="zoom-btn" onclick="zoomIn()" title="Acercar (Zoom In)"><i class="fa-solid fa-plus"></i></button>
         <button class="zoom-btn" onclick="zoomOut()" title="Alejar (Zoom Out)"><i class="fa-solid fa-minus"></i></button>
         <button class="zoom-btn" onclick="resetView()" title="Centrar Vista"><i class="fa-solid fa-crosshairs"></i></button>
+        <button class="zoom-btn" id="btnToggleField" onclick="toggleField()" title="Líneas de Campo Eléctrico"><i class="fa-solid fa-eye-slash" style="color:var(--text-secondary);"></i></button>
     </div>
 
     <canvas id="simCanvas"></canvas>
 
-    <div class="hud-bottom">
+    <div class="hud-bottom" id="hudBottom" style="height: 250px;">
+        <div class="resize-bar" id="resizeBar"></div>
         <div class="hud-panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="margin:0;">Agregar Partículas</h3>
@@ -123,7 +153,7 @@
                     <label class="label-text">Y</label>
                     <input type="number" id="yVal" class="modern-input" value="0">
                 </div>
-                <button class="btn btn-secondary" onclick="addCharge()" style="width: auto;"><i class="fa-solid fa-plus"></i></button>
+                <button class="btn btn-secondary" id="btnAddCharge" onclick="addCharge()" style="width: auto;"><i class="fa-solid fa-plus"></i></button>
             </div>
 
             <div class="input-row-mini" style="margin-top: 15px; border-top: 1px solid var(--border-subtle); padding-top: 15px; align-items: flex-end;">
@@ -182,6 +212,14 @@
         let scale = 20; // pixeles por unidad lógica
 
         let animationTime = 0;
+        let showField = false;
+        let streamlines = [];
+        
+        function toggleField() {
+            showField = !showField;
+            document.getElementById('btnToggleField').innerHTML = showField ? '<i class="fa-solid fa-eye" style="color:var(--accent-cyan);"></i>' : '<i class="fa-solid fa-eye-slash" style="color:var(--text-secondary);"></i>';
+            if (showField) calculateStreamlines();
+        }
         
         // Navegación Espacial
         let offsetX = 0;
@@ -244,6 +282,8 @@
         }
 
         // --- Lógica de Elementos ---
+        let editingChargeIndex = -1;
+
         function addCharge() {
             const qInput = parseFloat(document.getElementById('qVal').value);
             const qUnitMultiplier = parseFloat(document.getElementById('qUnit').value);
@@ -255,8 +295,22 @@
             const qInCoulombs = qInput * qUnitMultiplier;
             const qUnitLabel = document.getElementById('qUnit').options[document.getElementById('qUnit').selectedIndex].text;
 
-            charges.push({ id: Date.now(), q: qInCoulombs, x, y, origQ: qInput, origUnit: qUnitLabel });
-            selectedChargeIndex = charges.length - 1;
+            if (editingChargeIndex >= 0) {
+                charges[editingChargeIndex].q = qInCoulombs;
+                charges[editingChargeIndex].origQ = qInput;
+                charges[editingChargeIndex].origUnit = qUnitLabel;
+                charges[editingChargeIndex].x = x;
+                charges[editingChargeIndex].y = y;
+                
+                editingChargeIndex = -1;
+                const btn = document.getElementById('btnAddCharge');
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                btn.classList.add('btn-secondary');
+                btn.classList.remove('btn-primary');
+            } else {
+                charges.push({ id: Date.now(), q: qInCoulombs, x, y, origQ: qInput, origUnit: qUnitLabel });
+                selectedChargeIndex = charges.length - 1;
+            }
             updateChargeList();
             draw(); calculate();
         }
@@ -292,10 +346,32 @@
                 list.innerHTML += `
                     <div class="list-item" style="padding: 6px 10px;">
                         <span style="font-size: 0.8rem;">${selIndicator}<span class="${colorClass}">${c.q > 0 ? '+' : ''}${c.origQ}${c.origUnit}</span> en (${c.x.toFixed(1)}${mode==='2D' ? ','+c.y.toFixed(1) : ''}) ${distUnit}</span>
-                        <button class="btn-text-danger" onclick="removeCharge(${i})" style="padding: 2px;"><i class="fa-solid fa-xmark"></i></button>
+                        <div>
+                            <button class="btn-text-primary" onclick="editCharge(${i})" style="padding: 2px; margin-right: 5px;" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-text-danger" onclick="removeCharge(${i})" style="padding: 2px;" title="Eliminar"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
                     </div>
                 `;
             });
+        }
+        
+        function editCharge(i) {
+            const c = charges[i];
+            document.getElementById('qVal').value = c.origQ;
+            document.getElementById('xVal').value = c.x;
+            if(mode === '2D') document.getElementById('yVal').value = c.y;
+            
+            // Set input unit selection (basic string match)
+            const sel = document.getElementById('qUnit');
+            for(let j=0; j<sel.options.length; j++) {
+                if(sel.options[j].text === c.origUnit) sel.selectedIndex = j;
+            }
+
+            editingChargeIndex = i;
+            const btn = document.getElementById('btnAddCharge');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
         }
 
         function updatePointList() {
@@ -344,7 +420,26 @@
             }
         });
 
+        // Resize HUD
+        let isResizingHud = false;
+        let startHudY = 0;
+        let startHudHeight = 0;
+        document.getElementById('resizeBar').addEventListener('mousedown', (e) => {
+            isResizingHud = true;
+            startHudY = e.clientY;
+            startHudHeight = document.getElementById('hudBottom').offsetHeight;
+            e.stopPropagation();
+        });
+
         window.addEventListener('mousemove', (e) => {
+            if (isResizingHud) {
+                let diff = startHudY - e.clientY;
+                let maxHeight = window.innerHeight - 260; // Deja espacio para los botones de zoom
+                let newHeight = Math.max(100, Math.min(maxHeight, startHudHeight + diff));
+                document.getElementById('hudBottom').style.height = newHeight + 'px';
+                return;
+            }
+
             if (isDraggingCharge && selectedChargeIndex >= 0) {
                 const logical = fromCanvas(e.clientX, e.clientY);
                 charges[selectedChargeIndex].x = parseFloat(logical.x.toFixed(2));
@@ -362,11 +457,11 @@
         });
 
         window.addEventListener('mouseup', () => {
-            if (isDraggingCharge || isDraggingSpace) {
-                isDraggingCharge = false;
-                isDraggingSpace = false;
-                canvas.style.cursor = 'crosshair';
-            }
+            isDraggingSpace = false;
+            isDraggingCharge = false;
+            isResizingHud = false;
+            canvas.style.cursor = 'crosshair';
+            calculate();
         });
 
         canvas.addEventListener('wheel', (e) => {
@@ -460,6 +555,74 @@
                 res: currentResultString || 'Vacía'
             };
             document.getElementById('operationData').value = JSON.stringify(operationData);
+            
+            if (showField) calculateStreamlines();
+        }
+
+        function calculateStreamlines() {
+            streamlines = [];
+            if (!showField || charges.length === 0) return;
+            
+            const posCharges = charges.filter(c => c.q > 0);
+            const negCharges = charges.filter(c => c.q < 0);
+            
+            let sources = posCharges;
+            let reverse = false;
+            if (posCharges.length === 0 && negCharges.length > 0) {
+                sources = negCharges;
+                reverse = true;
+            }
+
+            const distMulti = getDistMultiplier();
+
+            sources.forEach(c => {
+                const numLines = 16; 
+                for(let i=0; i<numLines; i++) {
+                    let angle = (Math.PI * 2 / numLines) * i;
+                    let line = [];
+                    // Logicamente alejados del centro de la carga para no dar R=0
+                    let px = c.x + Math.cos(angle) * (1/scale) * 10;
+                    let py = c.y + Math.sin(angle) * (1/scale) * 10;
+                    
+                    for(let step=0; step<150; step++) {
+                        line.push({x: px, y: py});
+                        
+                        let Ex=0, Ey=0;
+                        let hitDist = Infinity;
+                        
+                        charges.forEach(oc => {
+                            const dx = (px - oc.x) * distMulti;
+                            const dy = (py - oc.y) * distMulti;
+                            const r2 = dx*dx + dy*dy;
+                            const r = Math.sqrt(r2);
+                            
+                            const realDx = px - oc.x;
+                            const realDy = py - oc.y;
+                            const realR = Math.sqrt(realDx*realDx + realDy*realDy);
+                            if (realR < hitDist) hitDist = realR;
+                            
+                            if (r2 === 0) return;
+                            const magE = k * Math.abs(oc.q) / r2;
+                            if (oc.q > 0) { Ex += magE * dx/r; Ey += magE * dy/r; }
+                            else { Ex -= magE * dx/r; Ey -= magE * dy/r; }
+                        });
+                        
+                        if (step > 3 && hitDist < (1/scale) * 15) break;
+                        
+                        const mag = Math.sqrt(Ex*Ex + Ey*Ey);
+                        if (mag === 0) break;
+                        
+                        line.push({x: px, y: py, mag: mag}); // Guardar magnitud en este punto
+                        
+                        let dir = reverse ? -1 : 1;
+                        px += (Ex / mag) * (1/scale) * 5 * dir;
+                        py += (Ey / mag) * (1/scale) * 5 * dir;
+                        
+                        if (Math.abs(px) > 2000/scale || Math.abs(py) > 2000/scale) break;
+                    }
+                    if(line.length > 0) streamlines.push(line);
+                }
+            });
         }
 
         // --- RENDERIZADO VISUAL ---
@@ -509,6 +672,118 @@
                 ctx.arc(pos.cx, pos.cy, 2, 0, Math.PI * 2);
                 ctx.fillStyle = '#10b981'; ctx.fill();
             });
+
+            // Líneas de Campo Animadas
+            if (showField) {
+                ctx.lineWidth = 1.5;
+                streamlines.forEach((line, index) => {
+                    if (line.length < 2) return;
+                    ctx.beginPath();
+                    let start = toCanvas(line[0].x, line[0].y);
+                    ctx.moveTo(start.cx, start.cy);
+                    for(let i=1; i<line.length; i++) {
+                        let pt = toCanvas(line[i].x, line[i].y);
+                        ctx.lineTo(pt.cx, pt.cy);
+                    }
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.stroke();
+                    
+                    // Flecha/Partícula animada viajando por la línea con Interpolación Suave
+                    const animSpeed = 25;
+                    let animPhase = (animationTime * animSpeed + index * 5) % line.length;
+                    let idx = Math.floor(animPhase);
+                    let fraction = animPhase - idx;
+                    
+                    if (idx >= 0 && idx < line.length) {
+                        let pt1 = line[idx];
+                        let interpX, interpY;
+                        
+                        if (idx < line.length - 1) {
+                            let pt2 = line[idx + 1];
+                            interpX = pt1.x + (pt2.x - pt1.x) * fraction;
+                            interpY = pt1.y + (pt2.y - pt1.y) * fraction;
+                        } else {
+                            interpX = pt1.x; interpY = pt1.y;
+                        }
+                        
+                        // Calcular el vector de campo eléctrico EXACTO en interpX, interpY
+                        // Esto da la rotación matemáticamente perfecta y la intensidad verdaderamente orgánica (sin parpadeos de interpolación lineal)
+                        let ex = 0, ey = 0;
+                        let distMulti = getDistMultiplier();
+                        charges.forEach(c => {
+                            let dxLogical = interpX - c.x;
+                            let dyLogical = interpY - c.y;
+                            let r2Logical = dxLogical*dxLogical + dyLogical*dyLogical;
+                            
+                            let dxReal = dxLogical * distMulti;
+                            let dyReal = dyLogical * distMulti;
+                            let r2Real = dxReal*dxReal + dyReal*dyReal;
+                            
+                            if(r2Real > 0) {
+                                let rReal = Math.sqrt(r2Real);
+                                let magE = k * Math.abs(c.q) / r2Real;
+                                if (c.q > 0) { ex += magE * dxReal/rReal; ey += magE * dyReal/rReal; }
+                                else { ex -= magE * dxReal/rReal; ey -= magE * dyReal/rReal; }
+                            }
+                        });
+                        
+                        let exactMag = Math.sqrt(ex*ex + ey*ey);
+                        
+                        // Determinamos la dirección del flujo real
+                        let posChargesCount = charges.filter(c => c.q > 0).length;
+                        let negChargesCount = charges.filter(c => c.q < 0).length;
+                        let flowReverse = (posChargesCount === 0 && negChargesCount > 0);
+                        let dirMult = flowReverse ? -1 : 1;
+                        
+                        // El eje Y en Canvas está invertido respecto al plano cartesiano lógico
+                        // Usamos ex, ey que no tienen la constante multiplicada, wait, ex y ey ahora tienen k multiplicado. 
+                        // atan2 funciona igual porque es un ratio
+                        let angle = Math.atan2(-ey * dirMult, ex * dirMult);
+                        
+                        // Fade out al final para que mueran suavemente, pero SIN fade-in al inicio para que nazcan con intensidad pura
+                        let progress = (idx + fraction) / line.length;
+                        let edgeFade = 1;
+                        if (progress > 0.8) edgeFade = (1 - progress) / 0.2;
+                        
+                        // Escala logarítmica ultra-suave para la Intensidad
+                        let logMag = Math.log10(exactMag + 1); 
+                        // Mapear un rango sensato de logMag (ej. 4 a 11) para que los cambios sean extremadamente graduales y orgánicos
+                        let fieldIntensity = Math.max(0, Math.min(1, (logMag - 4) / 8));
+                        
+                        let canvasPt = toCanvas(interpX, interpY);
+                        // Alpha baja muchísimo lejos del campo (0.05) para que se vean "apagadas/opacas", y sube a 1.0 cerca
+                        let alpha = (0.05 + fieldIntensity * 0.95) * edgeFade; 
+                        
+                        // Transición de color: Cyan (débil) a Rosa/Rojo (fuerte)
+                        let colorR = Math.round(6 + fieldIntensity * (244 - 6));
+                        let colorG = Math.round(182 + fieldIntensity * (63 - 182));
+                        let colorB = Math.round(212 + fieldIntensity * (94 - 212));
+                        let colorStr = `${colorR}, ${colorG}, ${colorB}`;
+                        
+                        let arrowLen = 10 + fieldIntensity * 15; // Tamaño dinámico
+                        let arrowWid = 6 + fieldIntensity * 8;
+                        
+                        ctx.save();
+                        ctx.translate(canvasPt.cx, canvasPt.cy);
+                        ctx.rotate(angle);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(-arrowLen/2, -arrowWid/2);
+                        ctx.lineTo(arrowLen/2, 0);
+                        ctx.lineTo(-arrowLen/2, arrowWid/2);
+                        ctx.lineTo(-arrowLen/4, 0);
+                        ctx.closePath();
+                        
+                        ctx.fillStyle = `rgba(${colorStr}, ${alpha})`;
+                        ctx.fill();
+                        ctx.shadowColor = `rgb(${colorStr})`;
+                        ctx.shadowBlur = (4 + fieldIntensity * 15) * edgeFade;
+                        ctx.fill(); // Doble fill para acentuar el glow
+                        
+                        ctx.restore();
+                    }
+                });
+            }
 
             // Cargas Orgánicas
             charges.forEach((c, i) => {
