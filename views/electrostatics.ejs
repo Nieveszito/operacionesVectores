@@ -829,6 +829,45 @@
         }
 
         setTimeout(() => { resizeCanvas(); animate(); }, 100);
+
+function saveToHistory() {
+    // 1. Validar que tengamos datos que guardar
+    if (charges.length === 0) {
+        alert("Agrega al menos una carga antes de guardar la simulación.");
+        return;
+    }
+
+    // 2. Recuperar la información actual generada en la función calculate()
+    const distMulti = getDistMultiplier();
+    const distUnit = getDistUnitLabel();
+    
+    // Formatear las cargas de forma legible para el historial y PDF
+    const listaCargas = charges.map((c, i) => {
+        return `q${i+1}=(${c.origQ} ${c.origUnit}) en (${c.x}, ${mode==='2D' ? c.y : 0}) ${distUnit}`;
+    }).join(' | ');
+
+    // Formatear los puntos de evaluación
+    const listaPuntos = points.length > 0 
+        ? points.map((p, i) => `P${i+1}(${p.x}, ${mode==='2D' ? p.y : 0})`).join(' | ')
+        : 'Sin puntos';
+
+    // Recuperar el string de resultados calculados (Fuerzas y Campos)
+    // Nota: Asegúrate de que tu función calculate() actualice de forma global un string similar
+    const campoYFuerzas = document.getElementById('forceResults').innerText + " // " + document.getElementById('fieldResults').innerText;
+
+    // 3. Empaquetar todo el objeto JSON
+    const operationData = {
+        type: 'Simulador Electrostático ' + mode,
+        a: listaCargas,
+        b: listaPuntos,
+        res: campoYFuerzas
+    };
+
+    // 4. Asignar el JSON serializado al input hidden y enviar el formulario
+    document.getElementById('operationData').value = JSON.stringify(operationData);
+    document.getElementById('saveForm').submit();
+}
+
     </script>
 </body>
 </html>

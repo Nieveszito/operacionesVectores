@@ -553,24 +553,36 @@ app.get('/electrostatics', requireAuth, (req, res) => {
   res.render('electrostatics', { user: req.session.user });
 });
 
+// Guardar simulación electrostática en el historial
 app.post('/electrostatics/save', requireAuth, async (req, res) => {
   try {
     const { operationData } = req.body;
+    
+    if (!operationData) {
+      return res.redirect('/electrostatics?message=No se recibieron datos válidos');
+    }
+
+    // Parsear el string JSON proveniente del formulario oculto
     const data = JSON.parse(operationData);
 
+    // Guardar en la base de datos usando el modelo VectorOperation
     await VectorOperation.create({
       user_id: req.session.user.id,
-      operation_type: data.type,
-      vector_a: data.a,
-      vector_b: data.b,
-      vector_c: null,
-      result: data.res
+      operation_type: data.type,   // Ejemplo: "Simulador Electrostático 2D"
+      vector_a: data.a,             // Listado compacto de cargas
+      vector_b: data.b,             // Listado compacto de puntos
+      vector_c: null,               // No requiere un tercer parámetro
+      result: data.res              // Resultados de Fuerza y Campo Eléctrico
     });
 
-    res.redirect('/history?message=Simulación guardada en el historial');
-  } catch (e) {
-    console.error(e);
-    res.redirect('/electrostatics?error=Error al guardar');
+    // Redireccionar al historial con mensaje de éxito
+    res.redirect('/history?message=Simulación guardada en el historial correctamente');
+  } catch (error) {
+    console.error("Error al guardar en el simulador electrostático:", error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'No se pudo guardar la simulación en el historial.'
+    });
   }
 });
 
